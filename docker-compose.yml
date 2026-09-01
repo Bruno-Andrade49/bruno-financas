@@ -1,0 +1,37 @@
+# Uso local apenas (dev). Produção usa Postgres/Redis gerenciados
+# (Neon/Upstash) — ver ARCHITECTURE.md, seção L.
+#
+#   docker compose up -d
+#
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: bruno_financas
+      POSTGRES_PASSWORD: bruno_financas
+      POSTGRES_DB: bruno_financas
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U bruno_financas']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Opcional (ARCHITECTURE.md seção B) — só é necessário a partir do momento em
+  # que cache/rate limiting/filas entrarem em uso real (V1). Descomente quando
+  # for testar isso localmente contra um equivalente do Upstash Redis.
+  # redis:
+  #   image: redis:7-alpine
+  #   restart: unless-stopped
+  #   ports:
+  #     - '6379:6379'
+  #   volumes:
+  #     - redis_data:/data
+
+volumes:
+  postgres_data:
+  # redis_data:

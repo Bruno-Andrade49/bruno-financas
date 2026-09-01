@@ -1,0 +1,444 @@
+// Bruno Finanças — schema de dados
+// Ver ARCHITECTURE.md seção C para responsabilidade, relacionamentos e
+// justificativa de índices/constraints de cada entidade.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+// Prisma 7: a connection string de runtime não vive mais aqui — o
+// PrismaClient recebe um "driver adapter" (ver server/lib/prisma.ts).
+// A URL usada pelo Migrate/CLI fica em prisma.config.ts.
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Auth (Better Auth) — User é compartilhado entre o domínio de negócio e a
+// lib de autenticação; Session/Account/Verification pertencem só à auth.
+// ---------------------------------------------------------------------------
+
+model User {
+  id            String  @id @default(uuid())
+  email         String  @unique
+  emailVerified Boolean @default(false)
+  name          String
+  image         String?
+
+  // Preferências do domínio financeiro
+  locale   String @default("pt-BR")
+  currency String @default("BRL")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  sessions Session[]
+  accounts Account[]
+
+  financialAccounts     FinancialAccount[]
+  categories            Category[]
+  paymentMethods        PaymentMethod[]
+  transactions          Transaction[]
+  budgets               Budget[]
+  goals                 Goal[]
+  recurringTransactions RecurringTransaction[]
+  insights              FinancialInsight[]
+  aiConversations       AIConversation[]
+  aiToolCallLogs        AIToolCallLog[]
+  auditLogs             AuditLog[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  ipAddress String?
+  userAgent String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Account {
+  id                    String    @id @default(uuid())
+  userId                String
+  accountId             String
+  providerId            String
+  // Identidade escopada por issuer desde o Better Auth 1.7 — a chave real de
+  // unicidade é (issuer, accountId), não (providerId, accountId).
+  // https://better-auth.com/docs/guides/1-7-upgrade-guide#account-identity-is-scoped-by-issuer
+  issuer                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([issuer, accountId])
+  @@index([userId])
+  @@index([providerId])
+  @@map("accounts")
+}
+
+model Verification {
+  id         String   @id @default(uuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verifications")
+}
+
+// ---------------------------------------------------------------------------
+// Domínio financeiro
+// ---------------------------------------------------------------------------
+
+enum FinancialAccountType {
+  checking
+  wallet
+  credit_card
+  savings
+  other
+}
+
+model FinancialAccount {
+  id             String               @id @default(uuid())
+  userId         String
+  name           String
+  type           FinancialAccountType
+  initialBalance Decimal              @default(0) @db.Decimal(14, 2)
+  currency       String               @default("BRL")
+  archivedAt     DateTime?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions   Transaction[]
+  paymentMethods PaymentMethod[]
+
+  @@index([userId])
+  @@map("financial_accounts")
+}
+
+enum TransactionType {
+  income
+  expense
+}
+
+model Category {
+  id        String          @id @default(uuid())
+  userId    String? // null = categoria padrão do sistema, compartilhada
+  parentId  String?
+  name      String
+  icon      String?
+  color     String?
+  type      TransactionType
+  isSystem  Boolean         @default(false)
+  createdAt DateTime        @default(now())
+
+  user     User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent   Category?  @relation("CategoryToSubcategory", fields: [parentId], references: [id], onDelete: Cascade)
+  children Category[] @relation("CategoryToSubcategory")
+
+  transactions Transaction[]
+  budgets      Budget[]
+
+  @@index([userId])
+  @@index([parentId])
+  @@map("categories")
+}
+
+enum PaymentMethodType {
+  cash
+  debit
+  credit
+  pix
+  transfer
+  other
+}
+
+model PaymentMethod {
+  id                 String            @id @default(uuid())
+  userId             String
+  name               String
+  type               PaymentMethodType
+  financialAccountId String?
+  archivedAt         DateTime?
+  createdAt          DateTime          @default(now())
+
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  financialAccount FinancialAccount? @relation(fields: [financialAccountId], references: [id], onDelete: SetNull)
+  transactions     Transaction[]
+
+  @@index([userId])
+  @@map("payment_methods")
+}
+
+enum TransactionSource {
+  manual
+  ai_nl
+  recurring
+}
+
+model Transaction {
+  id                     String            @id @default(uuid())
+  userId                 String
+  financialAccountId     String
+  categoryId             String
+  paymentMethodId        String?
+  goalId                 String?
+  recurringTransactionId String?
+  type                   TransactionType
+  amount                 Decimal           @db.Decimal(14, 2)
+  currency               String            @default("BRL")
+  description            String
+  date                   DateTime          @db.Date
+  isFixed                Boolean           @default(false)
+  source                 TransactionSource @default(manual)
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+  deletedAt              DateTime?
+
+  user                 User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  financialAccount     FinancialAccount      @relation(fields: [financialAccountId], references: [id], onDelete: Restrict)
+  category             Category              @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  paymentMethod        PaymentMethod?        @relation(fields: [paymentMethodId], references: [id], onDelete: SetNull)
+  goal                 Goal?                 @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  recurringTransaction RecurringTransaction? @relation(fields: [recurringTransactionId], references: [id], onDelete: SetNull)
+
+  @@index([userId, date])
+  @@index([userId, categoryId, date])
+  @@index([userId, type, date])
+  @@map("transactions")
+}
+
+model Budget {
+  id                String   @id @default(uuid())
+  userId            String
+  categoryId        String
+  limitAmount       Decimal  @db.Decimal(14, 2)
+  period            String   @default("monthly")
+  referenceMonth    DateTime @db.Date
+  alertThresholdPct Int      @default(80)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, categoryId, referenceMonth])
+  @@map("budgets")
+}
+
+enum GoalStatus {
+  active
+  completed
+  abandoned
+}
+
+model Goal {
+  id            String     @id @default(uuid())
+  userId        String
+  name          String
+  targetAmount  Decimal    @db.Decimal(14, 2)
+  currentAmount Decimal    @default(0) @db.Decimal(14, 2)
+  targetDate    DateTime   @db.Date
+  status        GoalStatus @default(active)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contributions Transaction[]
+
+  @@index([userId])
+  @@map("goals")
+}
+
+enum RecurrenceFrequency {
+  weekly
+  monthly
+  yearly
+}
+
+model RecurringTransaction {
+  id                 String              @id @default(uuid())
+  userId             String
+  financialAccountId String
+  categoryId         String
+  paymentMethodId    String?
+  type               TransactionType
+  amount             Decimal             @db.Decimal(14, 2)
+  description        String
+  frequency          RecurrenceFrequency
+  dayOfMonth         Int?
+  startDate          DateTime            @db.Date
+  endDate            DateTime?           @db.Date
+  active             Boolean             @default(true)
+  lastGeneratedFor   DateTime?           @db.Date
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@index([userId])
+  @@index([active, frequency])
+  @@map("recurring_transactions")
+}
+
+enum InsightType {
+  category_increase
+  top_expense
+  goal_projection
+  budget_alert
+  general
+}
+
+enum InsightSeverity {
+  info
+  warning
+}
+
+enum InsightGeneratedBy {
+  rule_engine
+  ai
+}
+
+model FinancialInsight {
+  id              String             @id @default(uuid())
+  userId          String
+  type            InsightType
+  payload         Json
+  title           String
+  description     String
+  severity        InsightSeverity    @default(info)
+  referencePeriod DateTime           @db.Date
+  generatedBy     InsightGeneratedBy @default(rule_engine)
+  readAt          DateTime?
+  createdAt       DateTime           @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("financial_insights")
+}
+
+// ---------------------------------------------------------------------------
+// IA — chat, ferramentas e auditoria (ver ARCHITECTURE.md seção D)
+// ---------------------------------------------------------------------------
+
+model AIConversation {
+  id         String    @id @default(uuid())
+  userId     String
+  title      String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  archivedAt DateTime?
+
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages     AIMessage[]
+  toolCallLogs AIToolCallLog[]
+
+  @@index([userId, updatedAt])
+  @@map("ai_conversations")
+}
+
+enum AIMessageRole {
+  user
+  assistant
+  tool
+}
+
+model AIMessage {
+  id             String        @id @default(uuid())
+  conversationId String
+  role           AIMessageRole
+  content        String
+  toolCalls      Json?
+  tokensInput    Int?
+  tokensOutput   Int?
+  createdAt      DateTime      @default(now())
+
+  conversation AIConversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  toolCallLogs AIToolCallLog[]
+
+  @@index([conversationId, createdAt])
+  @@map("ai_messages")
+}
+
+enum AIToolCallStatus {
+  success
+  validation_error
+  denied
+}
+
+model AIToolCallLog {
+  id                  String           @id @default(uuid())
+  userId              String
+  conversationId      String
+  messageId           String
+  toolName            String
+  parametersRaw       Json
+  parametersValidated Json?
+  resultSummary       Json?
+  durationMs          Int
+  status              AIToolCallStatus
+  createdAt           DateTime         @default(now())
+
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  message      AIMessage      @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([toolName])
+  @@map("ai_tool_call_logs")
+}
+
+// ---------------------------------------------------------------------------
+// Auditoria genérica (ver ARCHITECTURE.md seção H)
+// ---------------------------------------------------------------------------
+
+enum AuditActorType {
+  user
+  system
+  ai
+}
+
+model AuditLog {
+  id         String         @id @default(uuid())
+  userId     String
+  actorType  AuditActorType
+  action     String
+  entityType String
+  entityId   String
+  before     Json?
+  after      Json?
+  ip         String?
+  userAgent  String?
+  createdAt  DateTime       @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([entityType, entityId])
+  @@map("audit_logs")
+}

@@ -1,0 +1,33 @@
+# Nuxt dev/build outputs
+.output
+.data
+.nuxt
+.nitro
+.cache
+dist
+
+# Node dependencies
+node_modules
+
+# Logs
+logs
+*.log
+
+# Misc
+.DS_Store
+.fleet
+.idea
+
+# Local env files
+.env
+.env.*
+!.env.example
+
+/generated
+
+# Docs de skill para assistentes de IA, buscadas automaticamente pelo
+# `prisma init`/CLI — não é código do projeto, não precisa ir pro git.
+.claude/skills
+.windsurf
+.agents
+skills-lock.json
