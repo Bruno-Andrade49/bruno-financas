@@ -155,4 +155,16 @@
     height: calc(3.75rem + env(safe-area-inset-bottom, 0px));
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
+
+  /* Barra de input do chat (assistente): fica grudada acima da MobileTabBar
+     no mobile, e no rodapé normal da página no desktop. */
+  .chat-input-bar {
+    position: sticky;
+    bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  }
+  @media (min-width: 768px) {
+    .chat-input-bar {
+      bottom: 1rem;
+    }
+  }
 }

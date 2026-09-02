@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import { PhHouse, PhSparkle, PhTarget, PhWallet } from '@phosphor-icons/vue'
+import { PhChatCircleDots, PhHouse, PhSparkle, PhTarget, PhWallet } from '@phosphor-icons/vue'
 
 const route = useRoute()
 
@@ -33,6 +33,7 @@ const items = [
   { to: '/budgets', label: 'Orçamentos', icon: PhWallet },
   { to: '/goals', label: 'Metas', icon: PhTarget },
   { to: '/insights', label: 'Insights', icon: PhSparkle },
+  { to: '/assistant', label: 'Assistente', icon: PhChatCircleDots },
 ]
 
 function isActive(to: string) {

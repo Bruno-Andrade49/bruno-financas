@@ -28,6 +28,11 @@
           >
             {{ userInitial }}
           </span>
+          <Button as-child variant="ghost" size="icon" class="text-muted-foreground" title="Configurações">
+            <NuxtLink to="/settings">
+              <PhGearSix class="size-5" />
+            </NuxtLink>
+          </Button>
           <Button variant="ghost" size="icon" class="text-muted-foreground" title="Sair" @click="handleLogout">
             <PhSignOut class="size-5" />
           </Button>
@@ -44,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import { PhSignOut } from '@phosphor-icons/vue'
+import { PhGearSix, PhSignOut } from '@phosphor-icons/vue'
 import { Button } from '@/components/ui/button'
 import MobileTabBar from '@/components/layout/MobileTabBar.vue'
 import { authClient, useSession } from '@/lib/auth-client'
@@ -52,11 +57,17 @@ import { authClient, useSession } from '@/lib/auth-client'
 const session = useSession()
 const router = useRouter()
 
+// A navegação inferior do mobile (MobileTabBar) tem os 5 itens de uso
+// diário, incluindo o assistente — recorrências é "configura uma vez e
+// esquece", por isso entra só aqui no menu de topo do desktop (tem espaço
+// sobrando) e como link a partir do dashboard no mobile.
 const navItems = [
   { to: '/dashboard', label: 'Visão geral' },
+  { to: '/assistant', label: 'Assistente' },
   { to: '/budgets', label: 'Orçamentos' },
   { to: '/goals', label: 'Metas' },
   { to: '/insights', label: 'Insights' },
+  { to: '/recurring', label: 'Recorrências' },
 ]
 
 const userInitial = computed(() => session.value?.data?.user?.name?.trim()?.charAt(0)?.toUpperCase() ?? '')

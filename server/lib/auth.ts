@@ -6,6 +6,8 @@
 import { betterAuth } from 'better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { getPrisma } from './prisma'
+import { sendEmail } from './email'
+import { resetPasswordEmail, verificationEmail } from './email-templates'
 import { createDefaultAccount } from '../modules/financial-accounts/financial-accounts.service'
 import { createDefaultPaymentMethod } from '../modules/payment-methods/payment-methods.service'
 
@@ -19,7 +21,18 @@ export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL ?? 'http://localhost:3000',
   emailAndPassword: {
     enabled: true,
-    requireEmailVerification: false, // MVP: liberar depois de configurar envio de e-mail
+    requireEmailVerification: false, // não bloqueia login — só oferece a verificação
+    sendResetPassword: async ({ user, url }) => {
+      const { subject, html } = resetPasswordEmail(url)
+      await sendEmail({ to: user.email, subject, html })
+    },
+  },
+  emailVerification: {
+    sendVerificationEmail: async ({ user, url }) => {
+      const { subject, html } = verificationEmail(url)
+      await sendEmail({ to: user.email, subject, html })
+    },
+    sendOnSignUp: true,
   },
   session: {
     expiresIn: 60 * 60 * 24 * 30, // 30 dias

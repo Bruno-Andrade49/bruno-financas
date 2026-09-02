@@ -5,7 +5,8 @@ completa (decisões, alternativas comparadas, modelo de dados, segurança,
 roadmap) está em **[ARCHITECTURE.md](./ARCHITECTURE.md)** — comece por lá.
 
 Stack: Nuxt 3 + Vue 3 + TypeScript · shadcn-vue + Tailwind · PostgreSQL +
-Prisma · Zod · Better Auth · Redis opcional (V1+) · Anthropic Claude (IA).
+Prisma · Zod · Better Auth · Redis opcional (V1+) · Google Gemini (IA, free
+tier — adapter trocável, Anthropic Claude também suportado via `AI_PROVIDER`).
 
 ## Setup local
 
@@ -55,15 +56,78 @@ frontend (formulários) quanto no backend (validação de request).
 - Metas financeiras: valor alvo/data, aporte manual (`POST /goals/:id/contribute`,
   auto-completa a meta ao atingir o valor), projeção de quanto guardar por mês
   (`suggestedMonthlyContribution`) sempre recalculada, nunca persistida.
-- Dashboard com os cards de resumo, últimos lançamentos e criação rápida de
-  transação; página `/budgets` com os cards de orçamento; página `/goals` com
-  os cards de meta e aporte rápido.
+- Insights determinísticos (maior gasto do mês, alta de categoria vs. mês
+  anterior, alerta de orçamento) — gerados sob demanda (`POST /insights/generate`)
+  ou em lote via `/api/internal/cron/generate-insights` (protegida por
+  `CRON_SECRET`).
+- Transações recorrentes (semanal/mensal/anual, com clamp de dia em meses
+  mais curtos) — processadas via `/api/internal/cron/process-recurring`,
+  idempotente (constraint única `(recurringTransactionId, date)` no banco).
+- Redesign mobile-first (navegação inferior, tipografia/cor dedicadas,
+  ícones Phosphor).
+- Dashboard, `/budgets`, `/goals`, `/insights` e `/recurring` com CRUD
+  completo nas respectivas páginas.
+- Recuperação de senha (`/forgot-password` → `/reset-password`) e e-mail de
+  verificação de cadastro, via Resend (`server/lib/email.ts`). **Em modo
+  sandbox** — sem domínio verificado em resend.com/domains, só entrega pro
+  e-mail dono da conta Resend; verifique um domínio antes de ir pra produção.
+- Assistente de IA (`/assistant`) — chat com tool calling sobre os dados
+  financeiros do próprio usuário (`server/modules/ai/`). Provedor de LLM por
+  trás de uma interface própria (`ChatProvider`), com adapters para Google
+  Gemini (padrão, free tier via Google AI Studio — sem custo) e Anthropic
+  Claude, selecionável por `AI_PROVIDER` no `.env`. Tools tipadas e validadas
+  com Zod, sempre escopadas ao `userId` da sessão (nunca fornecido pelo
+  modelo); toda chamada auditada em `AIToolCallLog`. A tool de escrita
+  (`create_transaction`) só executa depois de confirmação explícita do
+  usuário numa mensagem separada — disciplina garantida pelo system prompt,
+  não por um mecanismo de proposta com ID (simplificação deliberada de MVP,
+  documentada em `ai.service.ts`; revisitar se o assistente for exposto a
+  múltiplos usuários por um canal como o WhatsApp). Também resiliente a falha
+  do provedor de IA a meio do fluxo: se a escrita já foi confirmada mas o
+  passo seguinte falhar, a resposta avisa que já foi salvo em vez de deixar o
+  usuário reenviar e duplicar o lançamento.
+
+- WhatsApp (`server/api/webhooks/whatsapp.*`) — o mesmo assistente por
+  mensagem no WhatsApp (Meta Cloud API). Cada usuário vincula seu número
+  gerando um código de 6 dígitos em Configurações → WhatsApp e mandando
+  `VINCULAR 123456` pro número do bot; a partir daí, qualquer mensagem de
+  texto vira uma chamada a `ai.service.sendChannelMessage` (canal `whatsapp`
+  na `AIConversation`, conversa contínua por número, sem conceito de aba de
+  navegador). Assinatura de cada webhook verificada via HMAC-SHA256
+  (`X-Hub-Signature-256`, App Secret) antes de qualquer processamento;
+  deduplicação por `wamid` evita reprocessar a mesma mensagem caso a Meta
+  reenvie o webhook por timeout.
+
+## WhatsApp — configurando o Meta Cloud API
+
+1. Crie um app em [developers.facebook.com/apps](https://developers.facebook.com/apps)
+   (tipo "Business") e adicione o produto **WhatsApp**.
+2. Em **WhatsApp → Configuração da API**, copie o **token de acesso
+   temporário** (válido 24h — pra além disso, gere um token permanente via
+   um System User) e o **ID do número de telefone** → `WHATSAPP_ACCESS_TOKEN`
+   e `WHATSAPP_PHONE_NUMBER_ID` no `.env`.
+3. Nessa mesma tela, em modo de desenvolvimento, adicione seu próprio número
+   como destinatário de teste (a Meta só entrega mensagens pra números
+   autorizados até o app ser aprovado pra produção).
+4. Em **Configurações do app → Básico**, copie o **App Secret** →
+   `WHATSAPP_APP_SECRET`. Escolha qualquer string pra `WHATSAPP_VERIFY_TOKEN`
+   (você mesmo define esse valor).
+5. Rode o app localmente (`npm run dev`) e exponha a porta com um túnel HTTPS:
+   ```bash
+   npx ngrok http 3000
+   ```
+6. Em **WhatsApp → Configuração → Webhook**, clique em editar, cole a URL do
+   ngrok + `/api/webhooks/whatsapp` como Callback URL, e o mesmo valor de
+   `WHATSAPP_VERIFY_TOKEN` como Verify Token. Salve (a Meta faz o handshake
+   `GET` na hora — só salva se responder certo) e inscreva-se no campo
+   `messages`.
+7. No app, vá em **Configurações → WhatsApp**, gere um código, e mande
+   `VINCULAR <código>` pro número de teste do WhatsApp Business. Depois disso
+   é só conversar normalmente.
+
+Um túnel do ngrok muda de URL a cada reinício (a menos que o domínio seja
+fixo num plano pago) — reconfigure o Callback URL sempre que reiniciar.
 
 ## Próximos passos (ver ARCHITECTURE.md, roadmap)
 
-Ainda fora deste scaffold inicial, na ordem sugerida pelo roadmap do MVP:
-insights determinísticos, chat de IA com tool calling, transações recorrentes,
-recuperação de senha (depende de configurar envio de e-mail no Better Auth).
-Os módulos `recurring`, `insights`, `ai` e `audit` já existem como pastas
-vazias em `server/modules/` esperando essa implementação, seguindo o mesmo
-padrão dos módulos `transactions`/`budgets`/`goals`.
+- Auditoria (`AuditLog`) — módulo `server/modules/audit/` ainda vazio.

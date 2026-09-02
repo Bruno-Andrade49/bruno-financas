@@ -4,6 +4,9 @@
       <div>
         <h1 class="text-2xl font-semibold tracking-tight">Visão geral</h1>
         <p class="text-sm text-muted-foreground">{{ monthLabel }}</p>
+        <NuxtLink to="/recurring" class="mt-0.5 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground md:hidden">
+          <PhArrowsClockwise class="size-3" />Recorrências
+        </NuxtLink>
       </div>
       <CreateTransactionDialog @created="refreshAll" />
     </div>
@@ -126,7 +129,7 @@
 </template>
 
 <script setup lang="ts">
-import { PhArrowDownRight, PhArrowUpRight, PhPiggyBank, PhTrendDown, PhTrendUp } from '@phosphor-icons/vue'
+import { PhArrowDownRight, PhArrowsClockwise, PhArrowUpRight, PhPiggyBank, PhTrendDown, PhTrendUp } from '@phosphor-icons/vue'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import CreateTransactionDialog from '@/components/transactions/CreateTransactionDialog.vue'

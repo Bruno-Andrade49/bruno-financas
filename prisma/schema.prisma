@@ -31,6 +31,15 @@ model User {
   locale   String @default("pt-BR")
   currency String @default("BRL")
 
+  // Vínculo com WhatsApp (Meta Cloud API) — número em E.164 (ex.: +5511999999999).
+  // O código de vínculo é gerado pelo usuário dentro do app e enviado por ele
+  // mesmo pro número do bot ("VINCULAR 123456"); confirma posse do número sem
+  // exigir OTP por SMS (que teria custo). Curto prazo de expiração por ser de
+  // uso único.
+  whatsappPhoneNumber     String?   @unique
+  whatsappLinkCode        String?
+  whatsappLinkCodeExpires DateTime?
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
@@ -131,9 +140,10 @@ model FinancialAccount {
   createdAt      DateTime             @default(now())
   updatedAt      DateTime             @updatedAt
 
-  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  transactions   Transaction[]
-  paymentMethods PaymentMethod[]
+  user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions          Transaction[]
+  paymentMethods        PaymentMethod[]
+  recurringTransactions RecurringTransaction[]
 
   @@index([userId])
   @@map("financial_accounts")
@@ -159,8 +169,9 @@ model Category {
   parent   Category?  @relation("CategoryToSubcategory", fields: [parentId], references: [id], onDelete: Cascade)
   children Category[] @relation("CategoryToSubcategory")
 
-  transactions Transaction[]
-  budgets      Budget[]
+  transactions          Transaction[]
+  budgets               Budget[]
+  recurringTransactions RecurringTransaction[]
 
   @@index([userId])
   @@index([parentId])
@@ -185,9 +196,10 @@ model PaymentMethod {
   archivedAt         DateTime?
   createdAt          DateTime          @default(now())
 
-  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  financialAccount FinancialAccount? @relation(fields: [financialAccountId], references: [id], onDelete: SetNull)
-  transactions     Transaction[]
+  user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  financialAccount      FinancialAccount?      @relation(fields: [financialAccountId], references: [id], onDelete: SetNull)
+  transactions          Transaction[]
+  recurringTransactions RecurringTransaction[]
 
   @@index([userId])
   @@map("payment_methods")
@@ -225,6 +237,7 @@ model Transaction {
   goal                 Goal?                 @relation(fields: [goalId], references: [id], onDelete: SetNull)
   recurringTransaction RecurringTransaction? @relation(fields: [recurringTransactionId], references: [id], onDelete: SetNull)
 
+  @@unique([recurringTransactionId, date])
   @@index([userId, date])
   @@index([userId, categoryId, date])
   @@index([userId, type, date])
@@ -297,8 +310,11 @@ model RecurringTransaction {
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  transactions Transaction[]
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  financialAccount FinancialAccount @relation(fields: [financialAccountId], references: [id], onDelete: Restrict)
+  category         Category         @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  paymentMethod    PaymentMethod?   @relation(fields: [paymentMethodId], references: [id], onDelete: SetNull)
+  transactions     Transaction[]
 
   @@index([userId])
   @@index([active, frequency])
@@ -347,19 +363,29 @@ model FinancialInsight {
 // ---------------------------------------------------------------------------
 
 model AIConversation {
-  id         String    @id @default(uuid())
+  id         String                @id @default(uuid())
   userId     String
   title      String?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  channel    AIConversationChannel @default(web)
+  createdAt  DateTime              @default(now())
+  updatedAt  DateTime              @updatedAt
   archivedAt DateTime?
 
   user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages     AIMessage[]
   toolCallLogs AIToolCallLog[]
 
-  @@index([userId, updatedAt])
+  // Uma linha por usuário+canal cobre o caso de uso: cada canal (web,
+  // whatsapp) mantém sua própria conversa contínua, sem expiração por tempo —
+  // igual ao chat já feito pra web, só que a "sessão" agora é o próprio
+  // canal em vez de uma aba do navegador.
+  @@index([userId, channel, updatedAt])
   @@map("ai_conversations")
+}
+
+enum AIConversationChannel {
+  web
+  whatsapp
 }
 
 enum AIMessageRole {

@@ -18,6 +18,12 @@ export default defineNuxtConfig({
 
   vite: {
     plugins: [tailwindcss()],
+    server: {
+      // Permite acessar o dev server por um túnel ngrok (webhook do WhatsApp
+      // precisa de HTTPS público) — Vite bloqueia hosts externos por padrão.
+      // Sufixo com "." cobre qualquer subdomínio aleatório que o ngrok gerar.
+      allowedHosts: ['.ngrok-free.dev', '.ngrok-free.app'],
+    },
   },
 
   // server/lib/auth.ts usa top-level await para resolver o PrismaClient
