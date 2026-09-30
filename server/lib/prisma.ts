@@ -9,10 +9,14 @@ function createPrismaClient() {
   const driver = process.env.DATABASE_DRIVER ?? (connectionString.includes('neon.tech') ? 'neon' : 'pg')
 
   if (driver === 'neon') {
-    return import('@prisma/adapter-neon').then(({ PrismaNeon }) => {
-      const adapter = new PrismaNeon({ connectionString })
-      return new PrismaClient({ adapter })
-    })
+    return Promise.all([import('@prisma/adapter-neon'), import('@neondatabase/serverless'), import('ws')]).then(
+      ([{ PrismaNeon }, { neonConfig }, { default: ws }]) => {
+        // o driver do Neon conecta por WebSocket; sem isso, depende da versão do Node
+        neonConfig.webSocketConstructor = ws
+        const adapter = new PrismaNeon({ connectionString })
+        return new PrismaClient({ adapter })
+      },
+    )
   }
 
   return import('@prisma/adapter-pg').then(({ PrismaPg }) => {
