@@ -189,6 +189,10 @@ const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0'
 const monthLabel = useMonthLabel(now)
 const monthName = now.toLocaleDateString('pt-BR', { month: 'long' })
 
+// avisa o portal do login que a página já está pronta na tela
+const { markReady } = useFinancePortal()
+onMounted(() => markReady('/dashboard'))
+
 const period = ref('Olá')
 onMounted(() => {
   const hour = new Date().getHours()
@@ -199,28 +203,18 @@ const greeting = computed(() => {
   return firstName ? `${period.value}, ${firstName}` : period.value
 })
 
-const {
-  data: summary,
-  pending: summaryPending,
-  error: summaryError,
-  refresh: refreshSummary,
-} = await useFetch('/api/v1/transactions/summary', { query: { month } })
+// as três buscas saem juntas, em vez de uma esperar a outra
+const [summaryFetch, transactionsFetch, trendFetch] = await Promise.all([
+  useFetch('/api/v1/transactions/summary', { query: { month } }),
+  useFetch('/api/v1/transactions', {
+    query: computed(() => ({ pageSize: PREVIEW_SIZE, ...(typeFilter.value ? { type: typeFilter.value } : {}) })),
+  }),
+  useFetch('/api/v1/transactions/trend', { query: { months: 6 } }),
+])
 
-const {
-  data: transactions,
-  pending: transactionsPending,
-  error: transactionsError,
-  refresh: refreshTransactions,
-} = await useFetch('/api/v1/transactions', {
-  query: computed(() => ({ pageSize: PREVIEW_SIZE, ...(typeFilter.value ? { type: typeFilter.value } : {}) })),
-})
-
-const {
-  data: trend,
-  pending: trendPending,
-  error: trendError,
-  refresh: refreshTrend,
-} = await useFetch('/api/v1/transactions/trend', { query: { months: 6 } })
+const { data: summary, pending: summaryPending, error: summaryError, refresh: refreshSummary } = summaryFetch
+const { data: transactions, pending: transactionsPending, error: transactionsError, refresh: refreshTransactions } = transactionsFetch
+const { data: trend, pending: trendPending, error: trendError, refresh: refreshTrend } = trendFetch
 
 const income = computed(() => Number(summary.value?.totalIncome ?? 0))
 const expense = computed(() => Number(summary.value?.totalExpense ?? 0))

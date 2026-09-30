@@ -100,7 +100,6 @@ useHead({
   script: [{ type: 'application/ld+json', innerHTML: JSON.stringify(webApplicationJsonLd(String(useRuntimeConfig().public.siteUrl))) }],
 })
 
-const router = useRouter()
 const portal = useFinancePortal()
 const submitButton = ref<{ $el?: HTMLElement } | null>(null)
 const { field, submit, errors, formError, loading, showServerError } = useAuthForm(registerSchema)
@@ -120,6 +119,6 @@ const onSubmit = submit(async (values) => {
     emailTaken.value = info.field === 'email' && /já existe/i.test(info.message)
     return
   }
-  await portal.enter(submitButton.value?.$el, () => router.push('/dashboard'), 'Preparando seu mundo financeiro')
+  await portal.enter(submitButton.value?.$el, '/dashboard', 'Preparando seu mundo financeiro')
 })
 </script>

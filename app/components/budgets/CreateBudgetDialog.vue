@@ -72,7 +72,7 @@ const emit = defineEmits<{ created: [] }>()
 const open = ref(false)
 const loading = ref(false)
 
-const { data: categories } = await useFetch('/api/v1/categories')
+const { data: categories } = useLazyFetch('/api/v1/categories')
 const expenseCategories = computed(() => categories.value?.filter((category: { type: string }) => category.type === 'expense') ?? [])
 
 const { handleSubmit, errors, defineField, resetForm } = useForm({

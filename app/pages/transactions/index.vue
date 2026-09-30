@@ -112,7 +112,7 @@ function clearFilters() {
   period.value = 'all'
 }
 
-const { data: categories } = await useFetch<{ id: string; name: string; type: 'income' | 'expense' }[]>('/api/v1/categories')
+const { data: categories } = useLazyFetch<{ id: string; name: string; type: 'income' | 'expense' }[]>('/api/v1/categories')
 const visibleCategories = computed(() => (categories.value ?? []).filter((c) => !type.value || c.type === type.value))
 watch(type, () => {
   if (category.value !== 'all' && !visibleCategories.value.some((c) => c.id === category.value)) category.value = 'all'

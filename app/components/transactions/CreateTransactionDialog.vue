@@ -89,9 +89,9 @@ const open = ref(false)
 const loading = ref(false)
 const type = ref<'income' | 'expense'>('expense')
 
-const { data: categories } = await useFetch('/api/v1/categories')
-const { data: financialAccounts } = await useFetch('/api/v1/financial-accounts')
-const { data: paymentMethods } = await useFetch('/api/v1/payment-methods')
+const { data: categories } = useLazyFetch('/api/v1/categories')
+const { data: financialAccounts } = useLazyFetch('/api/v1/financial-accounts')
+const { data: paymentMethods } = useLazyFetch('/api/v1/payment-methods')
 
 const filteredCategories = computed(
   () => categories.value?.filter((category: { type: string }) => category.type === type.value) ?? [],

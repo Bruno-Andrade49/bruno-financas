@@ -82,7 +82,6 @@ useHead({
   script: [{ type: 'application/ld+json', innerHTML: JSON.stringify(webApplicationJsonLd(String(useRuntimeConfig().public.siteUrl))) }],
 })
 
-const router = useRouter()
 const portal = useFinancePortal()
 const submitButton = ref<{ $el?: HTMLElement } | null>(null)
 const { field, submit, errors, formError, loading, showServerError } = useAuthForm(loginSchema)
@@ -95,6 +94,6 @@ const onSubmit = submit(async (values) => {
     showServerError(error)
     return
   }
-  await portal.enter(submitButton.value?.$el, () => router.push('/dashboard'), 'Entrando no seu mundo financeiro')
+  await portal.enter(submitButton.value?.$el, '/dashboard', 'Entrando no seu mundo financeiro')
 })
 </script>
