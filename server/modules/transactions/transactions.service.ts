@@ -8,9 +8,14 @@ import type {
 
 async function assertOwnedReferences(
   userId: string,
-  refs: { financialAccountId?: string; categoryId?: string; paymentMethodId?: string | null },
+  refs: { financialAccountId?: string; categoryId?: string; paymentMethodId?: string | null; goalId?: string | null },
 ) {
   const prisma = await getPrisma()
+
+  if (refs.goalId) {
+    const goal = await prisma.goal.findFirst({ where: { id: refs.goalId, userId }, select: { id: true } })
+    if (!goal) throw new InvalidReferenceError('Meta inválida')
+  }
 
   if (refs.financialAccountId) {
     const account = await prisma.financialAccount.findFirst({

@@ -1,14 +1,15 @@
 import { z } from 'zod'
+import { moneySchema } from './money'
 
 export const createBudgetSchema = z.object({
   categoryId: z.string().uuid(),
-  limitAmount: z.number().positive('O limite precisa ser maior que zero'),
+  limitAmount: moneySchema('O limite precisa ser maior que zero'),
   referenceMonth: z.string().regex(/^\d{4}-\d{2}$/, 'Use o formato YYYY-MM'),
   alertThresholdPct: z.number().int().min(1).max(100).default(80),
 })
 
 export const updateBudgetSchema = z.object({
-  limitAmount: z.number().positive('O limite precisa ser maior que zero').optional(),
+  limitAmount: moneySchema('O limite precisa ser maior que zero').optional(),
   alertThresholdPct: z.number().int().min(1).max(100).optional(),
 })
 

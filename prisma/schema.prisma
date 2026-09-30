@@ -349,3 +349,12 @@ model AuditLog {
   @@index([entityType, entityId])
   @@map("audit_logs")
 }
+
+model RateLimit {
+  key     String   @id
+  count   Int
+  resetAt DateTime
+
+  @@index([resetAt])
+  @@map("rate_limits")
+}

@@ -1,5 +1,7 @@
 import { betterAuth } from 'better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
+import { APIError, createAuthMiddleware } from 'better-auth/api'
+import { passwordStrength } from '../../shared/password-strength'
 import { getPrisma } from './prisma'
 import { sendEmail } from './email'
 import { resetPasswordEmail, verificationEmail } from './email-templates'
@@ -30,6 +32,9 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false, // não bloqueia o login, só envia o link
+    minPasswordLength: 8,
+    maxPasswordLength: 128,
+    revokeSessionsOnPasswordReset: true,
     sendResetPassword: async ({ user, url }) => {
       await sendEmail({ to: user.email, ...resetPasswordEmail(url) })
     },
@@ -39,6 +44,19 @@ export const auth = betterAuth({
       await sendEmail({ to: user.email, ...verificationEmail(url) })
     },
     sendOnSignUp: true,
+  },
+  // mesmas regras de senha da tela, valendo também pra quem chama a API direto
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      const password =
+        ctx.path === '/sign-up/email' ? ctx.body?.password : ctx.path === '/reset-password' ? ctx.body?.newPassword : undefined
+      if (typeof password === 'string' && !passwordStrength(password).valid) {
+        throw new APIError('BAD_REQUEST', {
+          code: 'PASSWORD_TOO_WEAK',
+          message: 'Senha fraca: use pelo menos 8 caracteres, com letras e números, e evite senhas comuns.',
+        })
+      }
+    }),
   },
   session: {
     expiresIn: 60 * 60 * 24 * 30, // 30 dias

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { moneySchema } from './money'
 
 export const transactionTypeSchema = z.enum(['income', 'expense'])
 export const transactionSourceSchema = z.enum(['manual', 'quick_add', 'recurring'])
@@ -9,7 +10,7 @@ export const createTransactionSchema = z.object({
   paymentMethodId: z.string().uuid().nullish(),
   goalId: z.string().uuid().nullish(),
   type: transactionTypeSchema,
-  amount: z.number().positive('O valor precisa ser maior que zero'),
+  amount: moneySchema('O valor precisa ser maior que zero'),
   description: z.string().trim().min(1, 'Descrição obrigatória').max(200),
   date: z.string().date(), // "YYYY-MM-DD"
   isFixed: z.boolean().default(false),

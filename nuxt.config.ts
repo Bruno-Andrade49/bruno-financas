@@ -48,6 +48,35 @@ export default defineNuxtConfig({
     plugins: [tailwindcss()],
   },
 
+  routeRules: {
+    '/**': {
+      headers: {
+        'X-Frame-Options': 'DENY',
+        'X-Content-Type-Options': 'nosniff',
+        'Referrer-Policy': 'strict-origin-when-cross-origin',
+        'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()',
+        // em dev o Vite precisa de websocket e scripts extras, por isso só em produção
+        ...(process.env.NODE_ENV === 'production'
+          ? {
+              'Strict-Transport-Security': 'max-age=63072000; includeSubDomains',
+              'Content-Security-Policy': [
+                "default-src 'self'",
+                "script-src 'self' 'unsafe-inline'",
+                "style-src 'self' 'unsafe-inline'",
+                "img-src 'self' data: blob:",
+                "font-src 'self' data:",
+                "connect-src 'self'",
+                "frame-ancestors 'none'",
+                "base-uri 'self'",
+                "form-action 'self'",
+                "object-src 'none'",
+              ].join('; '),
+            }
+          : {}),
+      },
+    },
+  },
+
   nitro: {
     esbuild: {
       options: {

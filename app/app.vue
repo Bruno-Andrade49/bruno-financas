@@ -4,7 +4,7 @@
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
-    <Toaster />
+    <Toaster position="top-center" :offset="76" :mobile-offset="72" />
   </div>
 </template>
 
