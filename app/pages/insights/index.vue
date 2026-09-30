@@ -7,8 +7,8 @@
       </div>
 
       <div class="relative">
-        <Button class="press rounded-xl" :disabled="generating || cooldown > 0" @click="handleGenerate">
-          <PhArrowsClockwise class="size-4" :class="{ 'animate-spin': generating }" />
+        <Button class="press rounded-xl" :disabled="cooldown > 0" :loading="generating" @click="handleGenerate">
+          <PhArrowsClockwise class="size-4" />
           <template v-if="generating">Gerando</template>
           <template v-else-if="cooldown > 0">Aguarde {{ cooldown }}s</template>
           <template v-else>Gerar insights</template>

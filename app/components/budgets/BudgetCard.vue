@@ -13,7 +13,7 @@
       <Progress :model-value="Math.min(budget.progressPct, 100)" :class="progressColorClass" />
       <div class="flex items-center justify-between text-sm text-muted-foreground">
         <span>{{ budget.progressPct }}% do limite</span>
-        <Button variant="ghost" size="sm" :disabled="deleting" @click="handleDelete">
+        <Button variant="ghost" size="sm" :loading="deleting" @click="handleDelete">
           {{ deleting ? 'Removendo...' : 'Remover' }}
         </Button>
       </div>

@@ -45,7 +45,7 @@
         </div>
 
         <DialogFooter>
-          <Button type="submit" :disabled="loading" class="w-full">
+          <Button type="submit" :loading="loading" class="w-full">
             {{ loading ? 'Salvando...' : 'Salvar' }}
           </Button>
         </DialogFooter>

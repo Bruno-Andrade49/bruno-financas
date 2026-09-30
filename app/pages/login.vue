@@ -43,8 +43,7 @@
 
         <FormAlert :message="formError" />
 
-        <Button type="submit" class="press h-11 w-full rounded-xl text-base" :disabled="loading">
-          <PhSpinnerGap v-if="loading" class="size-4 animate-spin" />
+        <Button ref="submitButton" type="submit" class="press h-11 w-full rounded-xl text-base" :loading="loading">
           {{ loading ? 'Entrando' : 'Entrar' }}
         </Button>
       </form>
@@ -59,7 +58,6 @@
 </template>
 
 <script setup lang="ts">
-import { PhSpinnerGap } from '@phosphor-icons/vue'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -85,6 +83,8 @@ useHead({
 })
 
 const router = useRouter()
+const portal = useFinancePortal()
+const submitButton = ref<{ $el?: HTMLElement } | null>(null)
 const { field, submit, errors, formError, loading, showServerError } = useAuthForm(loginSchema)
 const [email, emailAttrs] = field('email')
 const [password, passwordAttrs] = field('password')
@@ -95,6 +95,6 @@ const onSubmit = submit(async (values) => {
     showServerError(error)
     return
   }
-  await router.push('/dashboard')
+  await portal.enter(submitButton.value?.$el, () => router.push('/dashboard'), 'Entrando no seu mundo financeiro')
 })
 </script>

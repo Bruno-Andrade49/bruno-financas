@@ -29,13 +29,13 @@
 
       <form v-if="goal.status === 'active'" class="flex items-center gap-2" @submit.prevent="handleContribute">
         <Input v-model="contributionAmount" type="number" step="0.01" min="0" placeholder="Valor do aporte" class="h-9" />
-        <Button type="submit" size="sm" variant="secondary" :disabled="contributing">
+        <Button type="submit" size="sm" variant="secondary" :loading="contributing">
           {{ contributing ? '...' : 'Aportar' }}
         </Button>
       </form>
 
       <div class="flex justify-end">
-        <Button variant="ghost" size="sm" :disabled="deleting" @click="handleDelete">
+        <Button variant="ghost" size="sm" :loading="deleting" @click="handleDelete">
           {{ deleting ? 'Removendo...' : 'Remover' }}
         </Button>
       </div>

@@ -5,11 +5,13 @@
       <NuxtPage />
     </NuxtLayout>
     <Toaster position="top-center" :offset="76" :mobile-offset="72" />
+    <FinancePortal />
   </div>
 </template>
 
 <script setup lang="ts">
 import { Toaster } from '@/components/ui/sonner'
+import FinancePortal from '@/components/layout/FinancePortal.vue'
 import { SITE_DESCRIPTION, SITE_NAME } from '@/lib/seo'
 
 const route = useRoute()

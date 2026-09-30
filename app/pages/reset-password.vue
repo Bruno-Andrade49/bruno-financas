@@ -42,8 +42,7 @@
 
         <FormAlert :message="formError" />
 
-        <Button type="submit" class="press h-11 w-full rounded-xl text-base" :disabled="loading">
-          <PhSpinnerGap v-if="loading" class="size-4 animate-spin" />
+        <Button type="submit" class="press h-11 w-full rounded-xl text-base" :loading="loading">
           {{ loading ? 'Salvando' : 'Redefinir senha' }}
         </Button>
       </form>
@@ -52,7 +51,6 @@
 </template>
 
 <script setup lang="ts">
-import { PhSpinnerGap } from '@phosphor-icons/vue'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'

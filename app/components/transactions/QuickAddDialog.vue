@@ -77,8 +77,7 @@
           </p>
         </div>
 
-        <Button type="submit" class="press h-11 w-full rounded-xl text-base" :disabled="!canSave || saving">
-          <PhSpinnerGap v-if="saving" class="size-4 animate-spin" />
+        <Button type="submit" class="press h-11 w-full rounded-xl text-base" :disabled="!canSave" :loading="saving">
           {{ saving ? 'Salvando' : 'Lançar' }}
           <kbd v-if="!saving" class="ml-1 hidden rounded border border-current/30 px-1 text-[10px] font-medium opacity-70 sm:inline">Enter</kbd>
         </Button>
@@ -93,7 +92,6 @@ import {
   PhArrowsLeftRight,
   PhArrowUpRight,
   PhLightning,
-  PhSpinnerGap,
 } from '@phosphor-icons/vue'
 import { toast } from 'vue-sonner'
 import { Button } from '@/components/ui/button'

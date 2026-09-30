@@ -50,7 +50,7 @@
             {{ userInitial }}
           </span>
 
-          <Button variant="ghost" size="icon" class="press rounded-full text-muted-foreground" title="Sair" @click="handleLogout">
+          <Button variant="ghost" size="icon" class="press rounded-full text-muted-foreground" title="Sair" :loading="loggingOut" @click="handleLogout">
             <PhSignOut class="size-5" />
             <span class="sr-only">Sair</span>
           </Button>
@@ -106,8 +106,14 @@ function onKeydown(event: KeyboardEvent) {
 onMounted(() => window.addEventListener('keydown', onKeydown))
 onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
+const loggingOut = ref(false)
 async function handleLogout() {
-  await authClient.signOut()
-  await router.push('/login')
+  loggingOut.value = true
+  try {
+    await authClient.signOut()
+    await router.push('/login')
+  } finally {
+    loggingOut.value = false
+  }
 }
 </script>

@@ -16,7 +16,7 @@
       <CardDescription>{{ insight.description }}</CardDescription>
       <div class="flex items-center justify-between text-xs text-muted-foreground">
         <span>{{ new Date(insight.createdAt).toLocaleDateString('pt-BR') }}</span>
-        <Button v-if="isUnread" variant="ghost" size="sm" :disabled="marking" @click="handleMarkRead">
+        <Button v-if="isUnread" variant="ghost" size="sm" :loading="marking" @click="handleMarkRead">
           {{ marking ? 'Marcando...' : 'Marcar como lida' }}
         </Button>
       </div>

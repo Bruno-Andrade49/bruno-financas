@@ -23,10 +23,10 @@
       <div class="flex items-center justify-between text-sm text-muted-foreground">
         <span>Desde {{ new Date(item.startDate).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) }}</span>
         <div class="flex gap-1">
-          <Button variant="ghost" size="sm" :disabled="toggling" @click="handleToggle">
+          <Button variant="ghost" size="sm" :loading="toggling" @click="handleToggle">
             {{ item.active ? 'Pausar' : 'Reativar' }}
           </Button>
-          <Button variant="ghost" size="sm" :disabled="deleting" @click="handleDelete">
+          <Button variant="ghost" size="sm" :loading="deleting" @click="handleDelete">
             Remover
           </Button>
         </div>

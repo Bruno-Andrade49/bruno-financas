@@ -58,10 +58,9 @@
           v-if="hasMore"
           variant="outline"
           class="press h-11 w-full rounded-xl"
-          :disabled="loadingMore"
+          :loading="loadingMore"
           @click="loadMore"
         >
-          <PhSpinnerGap v-if="loadingMore" class="size-4 animate-spin" />
           {{ loadingMore ? 'Carregando' : `Carregar mais (${remaining} restantes)` }}
         </Button>
         <p v-else-if="items.length > PAGE_SIZE" class="py-2 text-center text-xs text-muted-foreground">Esses são todos.</p>
@@ -71,7 +70,7 @@
 </template>
 
 <script setup lang="ts">
-import { PhFunnel, PhMagnifyingGlass, PhReceipt, PhSpinnerGap, PhX } from '@phosphor-icons/vue'
+import { PhFunnel, PhMagnifyingGlass, PhReceipt, PhX } from '@phosphor-icons/vue'
 import { refDebounced } from '@vueuse/core'
 import { toast } from 'vue-sonner'
 import { Button } from '@/components/ui/button'
