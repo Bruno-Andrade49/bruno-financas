@@ -2,8 +2,8 @@
   <Card>
     <CardHeader class="flex items-center gap-3 space-y-0 pb-2">
       <span
-        class="flex size-9 shrink-0 items-center justify-center rounded-full"
-        :class="item.type === 'income' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'"
+        class="flex size-9 shrink-0 items-center justify-center rounded-[30%]"
+        :class="item.type === 'income' ? 'bg-income/12 text-income' : 'bg-expense/10 text-expense'"
       >
         <PhArrowsClockwise class="size-4" />
       </span>
@@ -16,7 +16,7 @@
     <CardContent class="space-y-3">
       <p
         class="text-xl font-semibold tabular-nums"
-        :class="item.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'"
+        :class="item.type === 'income' ? 'text-income' : 'text-expense'"
       >
         {{ item.type === 'income' ? '+' : '-' }}{{ format(item.amount) }}
       </p>

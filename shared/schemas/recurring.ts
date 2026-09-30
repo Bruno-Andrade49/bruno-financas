@@ -11,8 +11,6 @@ export const createRecurringTransactionSchema = z.object({
   amount: z.number().positive('O valor precisa ser maior que zero'),
   description: z.string().trim().min(1, 'Descrição obrigatória').max(200),
   frequency: recurrenceFrequencySchema,
-  // Só usado em monthly/yearly — se omitido, usa o dia de startDate. 1-31,
-  // clampado pro último dia do mês em meses mais curtos (ex.: 31 em fevereiro).
   dayOfMonth: z.number().int().min(1).max(31).nullish(),
   startDate: z.string().date(),
   endDate: z.string().date().nullish(),

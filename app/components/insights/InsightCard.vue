@@ -3,10 +3,10 @@
     <CardHeader class="pb-2">
       <div class="flex items-start justify-between gap-2">
         <div class="space-y-1">
-          <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">{{ typeLabel }}</p>
+          <p class="text-xs font-medium text-muted-foreground">{{ typeLabel }}</p>
           <CardTitle class="text-base font-medium">{{ insight.title }}</CardTitle>
         </div>
-        <Badge v-if="insight.severity === 'warning'" variant="outline" class="text-amber-600 dark:text-amber-400 shrink-0">
+        <Badge v-if="insight.severity === 'warning'" variant="outline" class="text-warning border-warning/40 shrink-0">
           Atenção
         </Badge>
         <Badge v-else variant="secondary" class="shrink-0">Info</Badge>

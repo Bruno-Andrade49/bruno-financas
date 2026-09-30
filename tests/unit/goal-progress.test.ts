@@ -22,7 +22,6 @@ describe('computeGoalProgress', () => {
 
   it('sugere aporte mensal dividindo o restante pelos meses até a data-alvo', () => {
     const result = computeGoalProgress(makeGoal(), today)
-    // jan (conta o mês corrente) até dez = 12 meses
     expect(result.monthsRemaining).toBe(12)
     expect(result.suggestedMonthlyContribution).toBe(750)
   })
@@ -31,7 +30,6 @@ describe('computeGoalProgress', () => {
     const result = computeGoalProgress(makeGoal({ targetDate: new Date(Date.UTC(2025, 11, 31)) }), today)
     expect(result.isOverdue).toBe(true)
     expect(result.monthsRemaining).toBe(0)
-    // sem meses restantes, sugere o valor total que falta de uma vez
     expect(result.suggestedMonthlyContribution).toBe(9000)
   })
 

@@ -1,5 +1,3 @@
-// Regra de negócio de metas financeiras. Progresso e projeção de aporte
-// mensal são sempre derivados (goals.progress.ts) — nunca persistidos.
 import * as repo from './goals.repository'
 import { computeGoalProgress } from './goals.progress'
 import type { CreateGoalInput, UpdateGoalInput } from '#shared/schemas/goal'
@@ -32,7 +30,6 @@ export async function remove(userId: string, id: string) {
   if (!deleted) throw new NotFoundError('Meta não encontrada')
 }
 
-/** Aporte manual — soma ao valor já guardado; completa a meta automaticamente ao atingir o alvo. */
 export async function contribute(userId: string, id: string, amount: number) {
   const updated = await repo.incrementContribution(userId, id, amount)
   if (!updated) throw new NotFoundError('Meta não encontrada')

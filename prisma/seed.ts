@@ -1,6 +1,3 @@
-// Categorias padrão do sistema (userId = null, isSystem = true) — toda conta
-// nova já enxerga essas categorias, sem precisar criar nada manualmente.
-// Rodar com: npm run db:seed
 import { PrismaClient } from '../generated/prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 
@@ -28,10 +25,6 @@ const INCOME_CATEGORIES = [
   { name: 'Outros', icon: 'ellipsis' },
 ]
 
-// Idempotente por (name, type) em vez de upsert por id: o id precisa ser um
-// uuid de verdade (é o que shared/schemas/transaction.ts valida em
-// categoryId), então não dá pra usar um id determinístico tipo
-// "system-expense-Moradia" como chave de upsert.
 async function ensureSystemCategory(data: { name: string; icon: string; type: 'income' | 'expense' }) {
   const existing = await prisma.category.findFirst({
     where: { name: data.name, type: data.type, isSystem: true, userId: null },

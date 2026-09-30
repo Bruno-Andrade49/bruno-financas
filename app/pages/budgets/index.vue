@@ -1,8 +1,8 @@
 <template>
-  <div class="space-y-8">
+  <div class="rise-in space-y-8">
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-semibold tracking-tight">Orçamentos</h1>
+        <h1 class="text-3xl font-bold tracking-tight">Orçamentos</h1>
         <p class="text-sm text-muted-foreground">{{ monthLabel }}</p>
       </div>
       <CreateBudgetDialog :month="month" @created="refresh" />
@@ -26,6 +26,7 @@ import BudgetCard from '@/components/budgets/BudgetCard.vue'
 import CreateBudgetDialog from '@/components/budgets/CreateBudgetDialog.vue'
 
 definePageMeta({ layout: 'app', middleware: 'auth' })
+useHead({ title: 'Orçamentos' })
 
 const now = new Date()
 const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`

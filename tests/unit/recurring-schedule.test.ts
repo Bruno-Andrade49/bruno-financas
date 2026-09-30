@@ -3,7 +3,7 @@ import { isRecurrenceDue } from '../../server/modules/recurring/recurring.schedu
 
 const d = (s: string) => new Date(`${s}T00:00:00.000Z`)
 
-describe('isRecurrenceDue — weekly', () => {
+describe('isRecurrenceDue: weekly', () => {
   const schedule = { frequency: 'weekly' as const, startDate: d('2026-09-01'), endDate: null, dayOfMonth: null }
 
   it('vence no próprio dia de início', () => {
@@ -23,7 +23,7 @@ describe('isRecurrenceDue — weekly', () => {
   })
 })
 
-describe('isRecurrenceDue — monthly', () => {
+describe('isRecurrenceDue: monthly', () => {
   it('vence no dayOfMonth configurado', () => {
     const schedule = { frequency: 'monthly' as const, startDate: d('2026-01-05'), endDate: null, dayOfMonth: 15 }
     expect(isRecurrenceDue(schedule, d('2026-09-15'))).toBe(true)
@@ -48,7 +48,7 @@ describe('isRecurrenceDue — monthly', () => {
   })
 })
 
-describe('isRecurrenceDue — yearly', () => {
+describe('isRecurrenceDue: yearly', () => {
   it('vence no mesmo mês/dia de startDate, todo ano', () => {
     const schedule = { frequency: 'yearly' as const, startDate: d('2024-12-25'), endDate: null, dayOfMonth: null }
     expect(isRecurrenceDue(schedule, d('2026-12-25'))).toBe(true)

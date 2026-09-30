@@ -1,8 +1,8 @@
 <template>
-  <div class="space-y-8">
+  <div class="rise-in space-y-8">
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-semibold tracking-tight">Metas</h1>
+        <h1 class="text-3xl font-bold tracking-tight">Metas</h1>
         <p class="text-sm text-muted-foreground">Quanto guardar por mês para chegar lá.</p>
       </div>
       <CreateGoalDialog @created="refresh" />
@@ -26,6 +26,7 @@ import CreateGoalDialog from '@/components/goals/CreateGoalDialog.vue'
 import GoalCard from '@/components/goals/GoalCard.vue'
 
 definePageMeta({ layout: 'app', middleware: 'auth' })
+useHead({ title: 'Metas' })
 
 const { data: goals, pending, error, refresh } = await useFetch('/api/v1/goals')
 </script>

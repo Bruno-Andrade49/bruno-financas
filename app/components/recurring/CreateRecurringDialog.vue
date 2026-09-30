@@ -122,8 +122,6 @@ const [categoryId] = defineField('categoryId')
 const [frequency] = defineField('frequency')
 const [startDate, startDateAttrs] = defineField('startDate')
 const [endDate] = defineField('endDate')
-// Input não aceita `null` no v-model (só string | number | undefined) —
-// endDate é opcional no schema, então precisa desse pequeno proxy.
 const endDateModel = computed({
   get: () => endDate.value ?? '',
   set: (value: string) => { endDate.value = value || null },

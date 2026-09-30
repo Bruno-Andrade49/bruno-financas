@@ -83,6 +83,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { createTransactionSchema } from '#shared/schemas/transaction'
 
 const emit = defineEmits<{ created: [] }>()
+const { notifySaved } = useQuickAdd()
 
 const open = ref(false)
 const loading = ref(false)
@@ -124,6 +125,7 @@ const onSubmit = handleSubmit(async (values) => {
     resetForm({ values: { date: new Date().toISOString().slice(0, 10) } })
     open.value = false
     emit('created')
+    notifySaved()
   } catch (error) {
     const message = (error as { data?: { error?: { message?: string } } })?.data?.error?.message
     toast.error(message ?? 'Não foi possível registrar a transação')

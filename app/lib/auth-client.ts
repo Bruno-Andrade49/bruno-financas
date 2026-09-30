@@ -1,5 +1,3 @@
-// Cliente de autenticação para uso nos componentes Vue (login, registro,
-// sessão reativa). O backend correspondente fica em server/lib/auth.ts.
 import { createAuthClient } from 'better-auth/vue'
 
 export const authClient = createAuthClient({

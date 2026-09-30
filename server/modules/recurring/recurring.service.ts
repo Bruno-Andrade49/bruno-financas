@@ -1,6 +1,3 @@
-// Regra de negócio de transações recorrentes. O processamento diário
-// (processDue) é a rota interna de cron que chama isto — nunca uma sessão
-// de usuário (ARCHITECTURE.md, seção E, fluxo 10 / seção L).
 import { getPrisma } from '../../lib/prisma'
 import * as repo from './recurring.repository'
 import { isRecurrenceDue } from './recurring.schedule'
@@ -59,11 +56,6 @@ export async function remove(userId: string, id: string) {
   if (!deleted) throw new NotFoundError('Recorrência não encontrada')
 }
 
-/**
- * Roda diariamente (cron). Pra cada recorrência ativa cujo vencimento é
- * `today`, gera a transação — se ainda não tiver sido gerada (idempotente
- * tanto pela checagem quanto pela constraint única no banco).
- */
 export async function processDue(today: Date) {
   const candidates = await repo.findActiveCandidates(today)
   let generated = 0
@@ -91,9 +83,6 @@ export async function processDue(today: Date) {
       await repo.generateOccurrence(recurring, today)
       generated++
     } catch (error) {
-      // Corrida rara (cron rodou 2x ao mesmo tempo): a constraint única do
-      // banco barra a segunda tentativa — não é um erro real, é o
-      // mecanismo de idempotência funcionando.
       if (isUniqueConstraintError(error)) {
         skipped++
         continue

@@ -38,7 +38,6 @@ export async function deleteForUser(userId: string, id: string) {
   return result.count > 0
 }
 
-/** Candidatas ativas de todos os usuários — filtro grosso pro cron, a checagem fina é em recurring.schedule.ts. */
 export async function findActiveCandidates(today: Date) {
   const prisma = await getPrisma()
   return prisma.recurringTransaction.findMany({
@@ -50,7 +49,6 @@ export async function findActiveCandidates(today: Date) {
   })
 }
 
-/** Idempotente: já existe uma transação gerada por essa recorrência nessa data exata? */
 export async function existsGeneratedFor(recurringTransactionId: string, date: Date) {
   const prisma = await getPrisma()
   const existing = await prisma.transaction.findFirst({
@@ -60,7 +58,6 @@ export async function existsGeneratedFor(recurringTransactionId: string, date: D
   return existing !== null
 }
 
-/** Cria a transação do dia e marca a recorrência — atômico, então nunca fica um sem o outro. */
 export async function generateOccurrence(recurring: {
   id: string
   userId: string

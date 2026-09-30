@@ -1,5 +1,4 @@
-# Uso local apenas (dev). Produção usa Postgres/Redis gerenciados
-# (Neon/Upstash) — ver ARCHITECTURE.md, seção L.
+# Banco local pra desenvolvimento.
 #
 #   docker compose up -d
 #
@@ -21,9 +20,7 @@ services:
       timeout: 5s
       retries: 10
 
-  # Opcional (ARCHITECTURE.md seção B) — só é necessário a partir do momento em
-  # que cache/rate limiting/filas entrarem em uso real (V1). Descomente quando
-  # for testar isso localmente contra um equivalente do Upstash Redis.
+  # Redis ainda não é usado. Descomente quando precisar.
   # redis:
   #   image: redis:7-alpine
   #   restart: unless-stopped

@@ -1,6 +1,5 @@
 import { getPrisma } from '../../lib/prisma'
 
-/** Categorias do sistema (compartilhadas) + as próprias do usuário. */
 export async function listForUser(userId: string) {
   const prisma = await getPrisma()
   return prisma.category.findMany({

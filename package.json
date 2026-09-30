@@ -1,7 +1,7 @@
 {
   "name": "bruno-financas",
   "version": "0.1.0",
-  "description": "Plataforma de controle financeiro pessoal com orçamentos, metas, insights automáticos e um assistente de IA para entender e planejar suas finanças.",
+  "description": "Plataforma de controle financeiro pessoal com lançamento rápido, orçamentos, metas, recorrências e insights automáticos. Feito pro celular, com tema claro e escuro.",
   "type": "module",
   "private": true,
   "scripts": {
@@ -9,7 +9,7 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare",
+    "postinstall": "prisma generate && nuxt prepare",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "db:generate": "prisma generate",
@@ -22,9 +22,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.123.0",
     "@fontsource-variable/plus-jakarta-sans": "^5.3.0",
-    "@google/genai": "^2.21.0",
     "@lucide/vue": "^1.39.0",
     "@neondatabase/serverless": "^1.1.0",
     "@phosphor-icons/vue": "^2.2.1",
@@ -38,6 +36,7 @@
     "better-auth": "^1.7.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "nodemailer": "^10.0.13",
     "nuxt": "^4.5.2",
     "pg": "^8.23.0",
     "pinia": "^4.0.3",
@@ -51,10 +50,10 @@
     "vue-router": "^5.2.0",
     "vue-sonner": "^2.0.9",
     "ws": "^8.21.3",
-    "zod": "^3.25.76",
-    "zod-to-json-schema": "^3.25.2"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@types/nodemailer": "^8.0.2",
     "@types/pg": "^8.23.1",
     "@types/ws": "^8.18.1",
     "dotenv": "^17.4.2",

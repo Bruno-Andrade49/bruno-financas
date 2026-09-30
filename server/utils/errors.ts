@@ -1,5 +1,3 @@
-// Formato de erro único da API — ARCHITECTURE.md, seção F:
-// { error: { code, message, details? } }
 import { ZodError } from 'zod'
 import type { EventHandler, EventHandlerRequest, H3Event } from 'h3'
 
@@ -49,7 +47,6 @@ function toApiError(error: unknown): { statusCode: number; body: unknown } {
     }
   }
 
-  // Erros criados via createError() do H3 (ex.: requireUser -> 401).
   if (error && typeof error === 'object' && 'statusCode' in error) {
     const h3Error = error as { statusCode: number; statusMessage?: string; message?: string }
     return {
@@ -70,7 +67,6 @@ function toApiError(error: unknown): { statusCode: number; body: unknown } {
   }
 }
 
-/** Envolve um handler de API padronizando o formato de erro de resposta. */
 export function defineApiHandler<T extends EventHandlerRequest = EventHandlerRequest>(
   handler: (event: H3Event<T>) => Promise<unknown>,
 ): EventHandler<T> {

@@ -1,33 +1,53 @@
 import tailwindcss from '@tailwindcss/vite'
 
-// https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
 
   modules: ['@pinia/nuxt'],
 
-  // Componentes shadcn-vue (app/components/ui) são sempre importados
-  // explicitamente — evita colisão de nome entre o arquivo do componente e
-  // seu index.ts no auto-import do Nuxt.
   components: [
     { path: '~/components', pathPrefix: false, ignore: ['ui/**'] },
   ],
 
   css: ['~/assets/css/main.css'],
 
-  vite: {
-    plugins: [tailwindcss()],
-    server: {
-      // Permite acessar o dev server por um túnel ngrok (webhook do WhatsApp
-      // precisa de HTTPS público) — Vite bloqueia hosts externos por padrão.
-      // Sufixo com "." cobre qualquer subdomínio aleatório que o ngrok gerar.
-      allowedHosts: ['.ngrok-free.dev', '.ngrok-free.app'],
+  runtimeConfig: {
+    public: {
+      siteUrl: 'http://localhost:3000',
     },
   },
 
-  // server/lib/auth.ts usa top-level await para resolver o PrismaClient
-  // (driver adapter) uma única vez no boot do processo.
+  app: {
+    head: {
+      htmlAttrs: { lang: 'pt-BR' },
+      meta: [
+        { name: 'theme-color', content: '#f6f8fb', media: '(prefers-color-scheme: light)' },
+        { name: 'theme-color', content: '#0b1222', media: '(prefers-color-scheme: dark)' },
+        { name: 'color-scheme', content: 'light dark' },
+        { name: 'format-detection', content: 'telephone=no' },
+        { name: 'apple-mobile-web-app-title', content: 'Bruno Finanças' },
+      ],
+      link: [
+        { rel: 'icon', type: 'image/png', sizes: '64x64', href: '/favicon.png' },
+        { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
+        { rel: 'manifest', href: '/site.webmanifest' },
+      ],
+      // aplica o tema salvo antes da página aparecer, pra não piscar
+      script: [
+        {
+          tagPosition: 'head',
+          innerHTML:
+            "(function(){try{var m=localStorage.getItem('bf-theme')||'system';var d=m==='dark'||(m==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d)}catch(e){}})()",
+        },
+      ],
+    },
+  },
+
+  vite: {
+    plugins: [tailwindcss()],
+  },
+
   nitro: {
     esbuild: {
       options: {

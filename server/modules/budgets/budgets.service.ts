@@ -1,6 +1,3 @@
-// Regra de negócio de orçamentos. Progresso NUNCA é persistido — sempre
-// recalculado a partir das transações reais (ARCHITECTURE.md, seção C),
-// pra nunca dessincronizar do gasto de verdade.
 import { getPrisma } from '../../lib/prisma'
 import * as repo from './budgets.repository'
 import { withProgress } from './budgets.progress'

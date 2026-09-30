@@ -25,8 +25,7 @@ logs
 
 /generated
 
-# Docs de skill para assistentes de IA, buscadas automaticamente pelo
-# `prisma init`/CLI — não é código do projeto, não precisa ir pro git.
+# arquivos de ferramentas de IA, não fazem parte do projeto
 .claude/skills
 .windsurf
 .agents

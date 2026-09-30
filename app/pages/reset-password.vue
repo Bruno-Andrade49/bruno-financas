@@ -1,7 +1,7 @@
 <template>
   <Card v-if="invalidToken">
     <CardHeader>
-      <CardTitle>Link inválido ou expirado</CardTitle>
+      <CardTitle class="text-2xl font-bold tracking-tight">Link inválido ou expirado</CardTitle>
       <CardDescription>Peça um novo link de recuperação de senha.</CardDescription>
     </CardHeader>
     <CardFooter class="justify-center text-sm text-muted-foreground">
@@ -13,7 +13,7 @@
 
   <Card v-else-if="done">
     <CardHeader>
-      <CardTitle>Senha redefinida</CardTitle>
+      <CardTitle class="text-2xl font-bold tracking-tight">Senha redefinida</CardTitle>
       <CardDescription>Já pode entrar com a nova senha.</CardDescription>
     </CardHeader>
     <CardFooter class="justify-center">
@@ -23,7 +23,7 @@
 
   <Card v-else>
     <CardHeader>
-      <CardTitle>Nova senha</CardTitle>
+      <CardTitle class="text-2xl font-bold tracking-tight">Nova senha</CardTitle>
       <CardDescription>Escolha uma nova senha para sua conta.</CardDescription>
     </CardHeader>
     <CardContent>
@@ -33,7 +33,7 @@
           <Input id="password" v-model="password" v-bind="passwordAttrs" type="password" autocomplete="new-password" />
           <p v-if="errors.password" class="text-sm text-destructive">{{ errors.password }}</p>
         </div>
-        <Button type="submit" class="w-full" :disabled="loading">
+        <Button type="submit" class="press h-11 w-full rounded-xl text-base" :disabled="loading">
           {{ loading ? 'Salvando...' : 'Redefinir senha' }}
         </Button>
       </form>
@@ -53,11 +53,10 @@ import { authClient } from '@/lib/auth-client'
 import { resetPasswordSchema } from '#shared/schemas/auth'
 
 definePageMeta({ layout: 'auth' })
+useSeoMeta({ title: 'Redefinir senha', robots: 'noindex, nofollow' })
 
 const route = useRoute()
 const token = computed(() => (typeof route.query.token === 'string' ? route.query.token : ''))
-// O callback do Better Auth manda ?error=INVALID_TOKEN quando o link já
-// expirou ou foi usado; sem token nenhum também não tem o que fazer aqui.
 const invalidToken = computed(() => Boolean(route.query.error) || !token.value)
 
 const loading = ref(false)

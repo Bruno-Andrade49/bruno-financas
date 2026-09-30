@@ -8,7 +8,6 @@ export async function listForUser(userId: string) {
   })
 }
 
-/** Cria a carteira padrão de um usuário novo (ver server/lib/auth.ts, databaseHooks). */
 export async function createDefaultAccount(userId: string) {
   const prisma = await getPrisma()
   return prisma.financialAccount.create({

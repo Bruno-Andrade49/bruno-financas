@@ -1,24 +1,11 @@
-// Bruno Finanças — schema de dados
-// Ver ARCHITECTURE.md seção C para responsabilidade, relacionamentos e
-// justificativa de índices/constraints de cada entidade.
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
 }
 
-// Prisma 7: a connection string de runtime não vive mais aqui — o
-// PrismaClient recebe um "driver adapter" (ver server/lib/prisma.ts).
-// A URL usada pelo Migrate/CLI fica em prisma.config.ts.
-
 datasource db {
   provider = "postgresql"
 }
-
-// ---------------------------------------------------------------------------
-// Auth (Better Auth) — User é compartilhado entre o domínio de negócio e a
-// lib de autenticação; Session/Account/Verification pertencem só à auth.
-// ---------------------------------------------------------------------------
 
 model User {
   id            String  @id @default(uuid())
@@ -27,18 +14,8 @@ model User {
   name          String
   image         String?
 
-  // Preferências do domínio financeiro
   locale   String @default("pt-BR")
   currency String @default("BRL")
-
-  // Vínculo com WhatsApp (Meta Cloud API) — número em E.164 (ex.: +5511999999999).
-  // O código de vínculo é gerado pelo usuário dentro do app e enviado por ele
-  // mesmo pro número do bot ("VINCULAR 123456"); confirma posse do número sem
-  // exigir OTP por SMS (que teria custo). Curto prazo de expiração por ser de
-  // uso único.
-  whatsappPhoneNumber     String?   @unique
-  whatsappLinkCode        String?
-  whatsappLinkCodeExpires DateTime?
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -55,8 +32,6 @@ model User {
   goals                 Goal[]
   recurringTransactions RecurringTransaction[]
   insights              FinancialInsight[]
-  aiConversations       AIConversation[]
-  aiToolCallLogs        AIToolCallLog[]
   auditLogs             AuditLog[]
 
   @@map("users")
@@ -83,9 +58,6 @@ model Account {
   userId                String
   accountId             String
   providerId            String
-  // Identidade escopada por issuer desde o Better Auth 1.7 — a chave real de
-  // unicidade é (issuer, accountId), não (providerId, accountId).
-  // https://better-auth.com/docs/guides/1-7-upgrade-guide#account-identity-is-scoped-by-issuer
   issuer                String
   accessToken           String?
   refreshToken          String?
@@ -116,10 +88,6 @@ model Verification {
   @@index([identifier])
   @@map("verifications")
 }
-
-// ---------------------------------------------------------------------------
-// Domínio financeiro
-// ---------------------------------------------------------------------------
 
 enum FinancialAccountType {
   checking
@@ -207,7 +175,7 @@ model PaymentMethod {
 
 enum TransactionSource {
   manual
-  ai_nl
+  quick_add
   recurring
 }
 
@@ -336,7 +304,6 @@ enum InsightSeverity {
 
 enum InsightGeneratedBy {
   rule_engine
-  ai
 }
 
 model FinancialInsight {
@@ -358,95 +325,9 @@ model FinancialInsight {
   @@map("financial_insights")
 }
 
-// ---------------------------------------------------------------------------
-// IA — chat, ferramentas e auditoria (ver ARCHITECTURE.md seção D)
-// ---------------------------------------------------------------------------
-
-model AIConversation {
-  id         String                @id @default(uuid())
-  userId     String
-  title      String?
-  channel    AIConversationChannel @default(web)
-  createdAt  DateTime              @default(now())
-  updatedAt  DateTime              @updatedAt
-  archivedAt DateTime?
-
-  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  messages     AIMessage[]
-  toolCallLogs AIToolCallLog[]
-
-  // Uma linha por usuário+canal cobre o caso de uso: cada canal (web,
-  // whatsapp) mantém sua própria conversa contínua, sem expiração por tempo —
-  // igual ao chat já feito pra web, só que a "sessão" agora é o próprio
-  // canal em vez de uma aba do navegador.
-  @@index([userId, channel, updatedAt])
-  @@map("ai_conversations")
-}
-
-enum AIConversationChannel {
-  web
-  whatsapp
-}
-
-enum AIMessageRole {
-  user
-  assistant
-  tool
-}
-
-model AIMessage {
-  id             String        @id @default(uuid())
-  conversationId String
-  role           AIMessageRole
-  content        String
-  toolCalls      Json?
-  tokensInput    Int?
-  tokensOutput   Int?
-  createdAt      DateTime      @default(now())
-
-  conversation AIConversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  toolCallLogs AIToolCallLog[]
-
-  @@index([conversationId, createdAt])
-  @@map("ai_messages")
-}
-
-enum AIToolCallStatus {
-  success
-  validation_error
-  denied
-}
-
-model AIToolCallLog {
-  id                  String           @id @default(uuid())
-  userId              String
-  conversationId      String
-  messageId           String
-  toolName            String
-  parametersRaw       Json
-  parametersValidated Json?
-  resultSummary       Json?
-  durationMs          Int
-  status              AIToolCallStatus
-  createdAt           DateTime         @default(now())
-
-  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  conversation AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  message      AIMessage      @relation(fields: [messageId], references: [id], onDelete: Cascade)
-
-  @@index([userId, createdAt])
-  @@index([toolName])
-  @@map("ai_tool_call_logs")
-}
-
-// ---------------------------------------------------------------------------
-// Auditoria genérica (ver ARCHITECTURE.md seção H)
-// ---------------------------------------------------------------------------
-
 enum AuditActorType {
   user
   system
-  ai
 }
 
 model AuditLog {

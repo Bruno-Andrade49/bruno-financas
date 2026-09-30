@@ -2,7 +2,6 @@ import { getPrisma } from '../../lib/prisma'
 import type { Prisma } from '../../../generated/prisma/client'
 import type { CategorySpend, InsightCandidate } from './insights.rules'
 
-/** Gasto por categoria no mês, já com o nome da categoria resolvido. */
 export async function categorySpendForMonth(userId: string, monthStart: Date, monthEnd: Date): Promise<CategorySpend[]> {
   const prisma = await getPrisma()
   const rows = await prisma.transaction.groupBy({
@@ -22,7 +21,6 @@ export async function categorySpendForMonth(userId: string, monthStart: Date, mo
   }))
 }
 
-/** Substitui os insights de regra determinística daquele usuário/período — idempotente ao regerar. */
 export async function replaceRuleEngineInsightsForPeriod(
   userId: string,
   referencePeriod: Date,

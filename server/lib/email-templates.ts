@@ -1,5 +1,3 @@
-// HTML simples e inline (sem dependência de build de e-mail) — funciona bem
-// o suficiente nos principais clientes pro volume transacional do MVP.
 function layout(title: string, bodyHtml: string): string {
   return `<!doctype html>
 <html lang="pt-BR">
@@ -32,7 +30,7 @@ function button(url: string, label: string): string {
 
 export function resetPasswordEmail(url: string) {
   return {
-    subject: 'Redefinir sua senha — Bruno Finanças',
+    subject: 'Redefina sua senha | Bruno Finanças',
     html: layout(
       'Redefinir senha',
       `<p>Recebemos um pedido para redefinir a senha da sua conta.</p>
@@ -44,7 +42,7 @@ export function resetPasswordEmail(url: string) {
 
 export function verificationEmail(url: string) {
   return {
-    subject: 'Confirme seu e-mail — Bruno Finanças',
+    subject: 'Confirme seu e-mail | Bruno Finanças',
     html: layout(
       'Confirme seu e-mail',
       `<p>Confirme seu endereço de e-mail para concluir seu cadastro.</p>

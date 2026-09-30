@@ -1,7 +1,7 @@
 <template>
   <Card v-if="!sent">
     <CardHeader>
-      <CardTitle>Recuperar senha</CardTitle>
+      <CardTitle class="text-2xl font-bold tracking-tight">Recuperar senha</CardTitle>
       <CardDescription>Informe seu e-mail e mandamos um link para redefinir a senha.</CardDescription>
     </CardHeader>
     <CardContent>
@@ -11,7 +11,7 @@
           <Input id="email" v-model="email" v-bind="emailAttrs" type="email" autocomplete="email" />
           <p v-if="errors.email" class="text-sm text-destructive">{{ errors.email }}</p>
         </div>
-        <Button type="submit" class="w-full" :disabled="loading">
+        <Button type="submit" class="press h-11 w-full rounded-xl text-base" :disabled="loading">
           {{ loading ? 'Enviando...' : 'Enviar link de recuperação' }}
         </Button>
       </form>
@@ -25,7 +25,7 @@
 
   <Card v-else>
     <CardHeader>
-      <CardTitle>Verifique seu e-mail</CardTitle>
+      <CardTitle class="text-2xl font-bold tracking-tight">Verifique seu e-mail</CardTitle>
       <CardDescription>
         Se existir uma conta com esse e-mail, enviamos um link de recuperação. Ele expira em 1 hora.
       </CardDescription>
@@ -50,6 +50,7 @@ import { authClient } from '@/lib/auth-client'
 import { forgotPasswordSchema } from '#shared/schemas/auth'
 
 definePageMeta({ layout: 'auth' })
+useSeoMeta({ title: 'Recuperar senha', robots: 'noindex' })
 
 const loading = ref(false)
 const sent = ref(false)
@@ -59,8 +60,6 @@ const { handleSubmit, errors, defineField } = useForm({
 })
 const [email, emailAttrs] = defineField('email')
 
-// Sempre mostra a mesma mensagem de sucesso, exista ou não o e-mail — não dá
-// pra revelar isso (ARCHITECTURE.md, seção H, mitigação de enumeração de conta).
 const onSubmit = handleSubmit(async (values) => {
   loading.value = true
   const { error } = await authClient.requestPasswordReset({

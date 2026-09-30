@@ -1,10 +1,7 @@
-// Schema compartilhado entre frontend (formulário, via vee-validate) e
-// backend (validação de request) — um único lugar de verdade por contrato,
-// conforme ARCHITECTURE.md, seção B/F/G.
 import { z } from 'zod'
 
 export const transactionTypeSchema = z.enum(['income', 'expense'])
-export const transactionSourceSchema = z.enum(['manual', 'ai_nl', 'recurring'])
+export const transactionSourceSchema = z.enum(['manual', 'quick_add', 'recurring'])
 
 export const createTransactionSchema = z.object({
   financialAccountId: z.string().uuid(),
@@ -26,6 +23,7 @@ export const listTransactionsQuerySchema = z.object({
   to: z.string().date().optional(),
   categoryId: z.string().uuid().optional(),
   type: transactionTypeSchema.optional(),
+  q: z.string().trim().max(100).optional(),
   page: z.coerce.number().int().positive().default(1),
   pageSize: z.coerce.number().int().positive().max(100).default(20),
 })

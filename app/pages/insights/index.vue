@@ -1,8 +1,8 @@
 <template>
-  <div class="space-y-8">
+  <div class="rise-in space-y-8">
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-semibold tracking-tight">Insights</h1>
+        <h1 class="text-3xl font-bold tracking-tight">Insights</h1>
         <p class="text-sm text-muted-foreground">Leituras automáticas sobre os seus gastos deste mês.</p>
       </div>
       <Button :disabled="generating" @click="handleGenerate">
@@ -31,6 +31,7 @@ import { Button } from '@/components/ui/button'
 import InsightCard from '@/components/insights/InsightCard.vue'
 
 definePageMeta({ layout: 'app', middleware: 'auth' })
+useHead({ title: 'Insights' })
 
 const { data: insights, pending, error, refresh } = await useFetch('/api/v1/insights')
 const generating = ref(false)

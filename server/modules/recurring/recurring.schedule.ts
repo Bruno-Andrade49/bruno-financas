@@ -1,7 +1,3 @@
-// Função pura, sem banco — decide se uma recorrência vence numa data.
-// ARCHITECTURE.md, seção E, fluxo 10 ("Processamento de uma transação
-// recorrente"). Datas sempre tratadas em UTC (mesmo padrão do resto do
-// server — ver server/utils/date.ts), porque as colunas são @db.Date.
 export type RecurrenceFrequency = 'weekly' | 'monthly' | 'yearly'
 
 export interface RecurrenceSchedule {
@@ -15,7 +11,6 @@ function toUtcDay(date: Date): number {
   return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
 }
 
-/** Último dia válido de um mês (ex.: dayOfMonth=31 em fevereiro -> 28 ou 29). */
 function clampToMonth(year: number, month: number, day: number): number {
   const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate()
   return Math.min(day, daysInMonth)

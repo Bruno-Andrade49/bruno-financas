@@ -1,8 +1,8 @@
 <template>
-  <div class="space-y-8">
+  <div class="rise-in space-y-8">
     <div class="flex items-center justify-between gap-3">
       <div>
-        <h1 class="text-2xl font-semibold tracking-tight">Recorrências</h1>
+        <h1 class="text-3xl font-bold tracking-tight">Recorrências</h1>
         <p class="text-sm text-muted-foreground">Lançamentos automáticos: assinaturas, salário, aluguel.</p>
       </div>
       <CreateRecurringDialog @created="refresh" />
@@ -26,6 +26,7 @@ import CreateRecurringDialog from '@/components/recurring/CreateRecurringDialog.
 import RecurringCard from '@/components/recurring/RecurringCard.vue'
 
 definePageMeta({ layout: 'app', middleware: 'auth' })
+useHead({ title: 'Recorrências' })
 
 const { data: items, pending, error, refresh } = await useFetch('/api/v1/recurring-transactions')
 </script>

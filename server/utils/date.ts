@@ -1,7 +1,3 @@
-/**
- * Converte "YYYY-MM" em limites de mês em UTC (usado por resumo mensal e
- * orçamentos) e no "primeiro dia do mês" usado como referenceMonth.
- */
 export function parseMonthParam(month: string) {
   const match = /^(\d{4})-(\d{2})$/.exec(month)
   if (!match) throw new InvalidReferenceError('Mês inválido, use o formato YYYY-MM')
@@ -15,7 +11,6 @@ export function parseMonthParam(month: string) {
   }
 }
 
-/** "2026-09" -> "2026-08" (vira o ano quando o mês é janeiro). */
 export function previousMonthKey(month: string): string {
   const { referenceMonth } = parseMonthParam(month)
   const previous = new Date(Date.UTC(referenceMonth.getUTCFullYear(), referenceMonth.getUTCMonth() - 1, 1))

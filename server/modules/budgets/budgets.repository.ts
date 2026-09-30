@@ -35,7 +35,6 @@ export async function deleteForUser(userId: string, id: string) {
   return result.count > 0
 }
 
-/** Soma de despesas de uma categoria dentro do mês do orçamento. */
 export async function spentForCategoryMonth(
   userId: string,
   categoryId: string,

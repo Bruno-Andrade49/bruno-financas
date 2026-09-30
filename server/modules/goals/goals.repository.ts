@@ -34,7 +34,6 @@ export async function deleteForUser(userId: string, id: string) {
   return result.count > 0
 }
 
-/** Incrementa o aporte e retorna a meta atualizada (ou null se não for do usuário). */
 export async function incrementContribution(userId: string, id: string, amount: number) {
   const prisma = await getPrisma()
   const result = await prisma.goal.updateMany({

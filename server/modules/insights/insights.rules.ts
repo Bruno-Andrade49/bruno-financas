@@ -1,11 +1,3 @@
-// Regras determinísticas de geração de insight — puras (recebem dado já
-// carregado, nunca tocam o banco), pra serem testáveis isoladamente.
-// ARCHITECTURE.md, seção E: "maioria dos insights do MVP é regra
-// determinística ... barato, previsível, sem custo de IA".
-//
-// Import explícito (em vez de depender do auto-import do Nitro) para que
-// este módulo possa ser importado direto pelo Vitest, sem o pipeline do
-// Nuxt/Nitro no meio.
 import { formatCurrencyBRL } from '../../utils/currency'
 
 export type InsightCandidate = {
@@ -28,7 +20,6 @@ export type BudgetForAlert = {
   status: 'ok' | 'warning' | 'exceeded'
 }
 
-/** "Seu maior gasto neste mês foi X." */
 export function topExpenseRule(categorySpend: CategorySpend[]): InsightCandidate[] {
   if (categorySpend.length === 0) return []
   const top = categorySpend.reduce((a, b) => (b.total > a.total ? b : a))
@@ -38,12 +29,11 @@ export function topExpenseRule(categorySpend: CategorySpend[]): InsightCandidate
     type: 'top_expense',
     severity: 'info',
     title: `Maior gasto do mês: ${top.categoryName}`,
-    description: `Você gastou ${formatCurrencyBRL(top.total)} com ${top.categoryName} este mês — sua maior categoria de despesa.`,
+    description: `Você gastou ${formatCurrencyBRL(top.total)} com ${top.categoryName} este mês, sua maior categoria de despesa.`,
     payload: { categoryId: top.categoryId, categoryName: top.categoryName, total: top.total },
   }]
 }
 
-/** "Seus gastos com X aumentaram Y% este mês." */
 export function categoryIncreaseRule(
   current: CategorySpend[],
   previousByCategory: Map<string, number>,
@@ -76,7 +66,6 @@ export function categoryIncreaseRule(
   return insights
 }
 
-/** Orçamento perto do limite ou estourado — reaproveita o status já calculado pelo módulo budgets. */
 export function budgetAlertRule(budgets: BudgetForAlert[]): InsightCandidate[] {
   return budgets
     .filter((budget) => budget.status !== 'ok')

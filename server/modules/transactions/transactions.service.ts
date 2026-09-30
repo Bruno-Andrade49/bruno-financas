@@ -1,6 +1,3 @@
-// Regra de negócio de transações. É esta camada — não a rota, não a IA —
-// que qualquer consumidor (endpoint REST ou tool de IA) deve chamar
-// (ARCHITECTURE.md, seção A e D).
 import { getPrisma } from '../../lib/prisma'
 import * as repo from './transactions.repository'
 import type {
@@ -8,10 +5,7 @@ import type {
   UpdateTransactionInput,
   ListTransactionsQuery,
 } from '#shared/schemas/transaction'
-// NotFoundError e InvalidReferenceError vêm de server/utils/errors.ts,
-// auto-importado pelo Nitro em qualquer módulo do server/.
 
-/** Garante que a conta/categoria/forma de pagamento referenciadas são do próprio usuário. */
 async function assertOwnedReferences(
   userId: string,
   refs: { financialAccountId?: string; categoryId?: string; paymentMethodId?: string | null },
@@ -53,7 +47,6 @@ export async function getById(userId: string, id: string) {
   return transaction
 }
 
-
 export async function create(userId: string, input: CreateTransactionInput) {
   await assertOwnedReferences(userId, input)
   return repo.create(userId, { ...input, date: new Date(input.date) })
@@ -72,86 +65,24 @@ export async function remove(userId: string, id: string) {
   if (!deleted) throw new NotFoundError('Transação não encontrada')
 }
 
-/** Categoria por nome (case-insensitive), só entre as do usuário + as do sistema — nunca de outro usuário. */
-async function findCategoryByNameForUser(userId: string, name: string, type?: 'income' | 'expense') {
-  const prisma = await getPrisma()
-  return prisma.category.findFirst({
-    where: {
-      name: { equals: name, mode: 'insensitive' },
-      OR: [{ userId }, { userId: null, isSystem: true }],
-      ...(type ? { type } : {}),
-    },
-  })
-}
+export async function monthlyTrend(userId: string, months: number) {
+  const now = new Date()
+  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (months - 1), 1))
+  const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1))
 
-/** Usada pela tool de IA get_expenses_by_category (ARCHITECTURE.md, seção D). */
-export async function sumByCategory(
-  userId: string,
-  input: { category: string; startDate: string; endDate: string },
-) {
-  const category = await findCategoryByNameForUser(userId, input.category)
-  if (!category) {
-    return { found: false as const, category: input.category }
+  const rows = await repo.findForTrend(userId, start, end)
+
+  const buckets = new Map<string, { month: string; income: number; expense: number }>()
+  for (let i = 0; i < months; i++) {
+    const d = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + i, 1))
+    const key = d.toISOString().slice(0, 7)
+    buckets.set(key, { month: key, income: 0, expense: 0 })
   }
-
-  const result = await repo.sumByCategoryForUser(
-    userId,
-    category.id,
-    new Date(input.startDate),
-    new Date(input.endDate),
-  )
-  return { found: true as const, category: category.name, ...result }
-}
-
-/** Usada pelas tools de IA get_income_vs_expenses e compare_periods. */
-export async function totalsForPeriod(userId: string, startDate: string, endDate: string) {
-  const { totalIncome, totalExpense } = await repo.summaryForUserMonth(
-    userId,
-    new Date(startDate),
-    new Date(endDate),
-  )
-  return {
-    totalIncome: Number(totalIncome),
-    totalExpense: Number(totalExpense),
-    savings: Number(totalIncome) - Number(totalExpense),
+  for (const row of rows) {
+    const bucket = buckets.get(row.date.toISOString().slice(0, 7))
+    if (bucket) bucket[row.type] += Number(row.amount)
   }
-}
-
-/**
- * Cria uma transação a partir da tool de IA create_transaction — mesma
- * validação e mesmo service do endpoint REST, só resolve categoria por nome
- * (o modelo não conhece IDs) e usa a conta/forma de pagamento padrão do
- * usuário (ARCHITECTURE.md, seção D: a tool nunca recebe userId do modelo,
- * e aqui nem financialAccountId — sempre injetado pelo servidor).
- */
-export async function createFromAssistant(
-  userId: string,
-  input: { type: 'income' | 'expense'; amount: number; categoryName: string; description: string; date: string },
-) {
-  const prisma = await getPrisma()
-
-  const category = await findCategoryByNameForUser(userId, input.categoryName, input.type)
-  if (!category) {
-    throw new InvalidReferenceError(`Categoria "${input.categoryName}" não encontrada`)
-  }
-
-  const financialAccount = await prisma.financialAccount.findFirst({ where: { userId }, orderBy: { createdAt: 'asc' } })
-  if (!financialAccount) throw new InvalidReferenceError('Nenhuma conta financeira encontrada')
-
-  const paymentMethod = await prisma.paymentMethod.findFirst({ where: { userId }, orderBy: { createdAt: 'asc' } })
-
-  const transaction = await repo.create(userId, {
-    type: input.type,
-    amount: input.amount,
-    description: input.description,
-    date: new Date(input.date),
-    categoryId: category.id,
-    financialAccountId: financialAccount.id,
-    paymentMethodId: paymentMethod?.id ?? null,
-    source: 'ai_nl',
-  })
-
-  return { ...transaction, categoryName: category.name }
+  return [...buckets.values()]
 }
 
 export async function monthlySummary(userId: string, month: string) {
@@ -163,11 +94,21 @@ export async function monthlySummary(userId: string, month: string) {
     monthEnd,
   )
 
+  const names = new Map(
+    (await repo.findCategoryNames(byCategory.map((row) => row.categoryId))).map((c) => [c.id, c.name]),
+  )
+
   return {
     month,
     totalIncome,
     totalExpense,
     savings: Number(totalIncome) - Number(totalExpense),
-    byCategory,
+    byCategory: byCategory
+      .map((row) => ({
+        categoryId: row.categoryId,
+        name: names.get(row.categoryId) ?? 'Sem categoria',
+        total: Number(row._sum.amount ?? 0),
+      }))
+      .sort((a, b) => b.total - a.total),
   }
 }

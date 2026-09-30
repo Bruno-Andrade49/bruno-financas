@@ -1,19 +1,15 @@
-<!--
-  Padrão único de loading/error/empty usado em qualquer tela que consome
-  useFetch/useAsyncData (ARCHITECTURE.md, seção G) — evita cada página
-  reinventar seu próprio spinner e mensagem de erro genérica.
--->
 <template>
-  <div v-if="pending" class="space-y-2">
-    <div class="h-10 animate-pulse rounded-md bg-muted" />
-    <div class="h-10 animate-pulse rounded-md bg-muted" />
-    <div class="h-10 animate-pulse rounded-md bg-muted" />
+  <div v-if="pending" class="space-y-2.5" aria-busy="true" aria-label="Carregando">
+    <div class="h-12 animate-pulse rounded-xl bg-muted" />
+    <div class="h-12 animate-pulse rounded-xl bg-muted [animation-delay:120ms]" />
+    <div class="h-12 animate-pulse rounded-xl bg-muted [animation-delay:240ms]" />
   </div>
-  <div v-else-if="error" class="rounded-md border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+  <div v-else-if="error" role="alert" class="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
     {{ errorMessage }}
   </div>
-  <div v-else-if="isEmpty" class="rounded-md border border-dashed p-8 text-center text-sm text-muted-foreground">
-    <slot name="empty">{{ emptyMessage }}</slot>
+  <slot v-else-if="isEmpty && $slots.empty" name="empty" />
+  <div v-else-if="isEmpty" class="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+    {{ emptyMessage }}
   </div>
   <slot v-else />
 </template>

@@ -1,5 +1,3 @@
-// Função pura, sem dependência de banco — cálculo de progresso de orçamento
-// (ARCHITECTURE.md, seção C: nunca persistido, sempre recalculado).
 export type BudgetStatus = 'ok' | 'warning' | 'exceeded'
 
 export function withProgress<T extends { limitAmount: unknown; alertThresholdPct: number }>(

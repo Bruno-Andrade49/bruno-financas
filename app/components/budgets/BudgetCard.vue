@@ -46,7 +46,7 @@ const deleting = ref(false)
 const statusLabel = computed(() => ({ ok: 'Em dia', warning: 'Perto do limite', exceeded: 'Estourado' })[props.budget.status])
 const badgeVariant = computed(() => ({ ok: 'secondary', warning: 'outline', exceeded: 'destructive' })[props.budget.status] as 'secondary' | 'outline' | 'destructive')
 const progressColorClass = computed(
-  () => ({ ok: '', warning: '[&>div]:bg-amber-500', exceeded: '[&>div]:bg-destructive' })[props.budget.status],
+  () => ({ ok: '', warning: '[&>div]:bg-warning', exceeded: '[&>div]:bg-destructive' })[props.budget.status],
 )
 
 async function handleDelete() {

@@ -1,7 +1,7 @@
 <template>
   <Card>
     <CardHeader>
-      <CardTitle>Entrar</CardTitle>
+      <CardTitle class="text-2xl font-bold tracking-tight">Entrar</CardTitle>
       <CardDescription>Acesse sua visão financeira.</CardDescription>
     </CardHeader>
     <CardContent>
@@ -21,7 +21,7 @@
           <Input id="password" v-model="password" v-bind="passwordAttrs" type="password" autocomplete="current-password" />
           <p v-if="errors.password" class="text-sm text-destructive">{{ errors.password }}</p>
         </div>
-        <Button type="submit" class="w-full" :disabled="loading">
+        <Button type="submit" class="press h-11 w-full rounded-xl text-base" :disabled="loading">
           {{ loading ? 'Entrando...' : 'Entrar' }}
         </Button>
       </form>
@@ -36,6 +36,7 @@
 </template>
 
 <script setup lang="ts">
+import { webApplicationJsonLd } from '@/lib/seo'
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
 import { toast } from 'vue-sonner'
@@ -47,6 +48,17 @@ import { authClient } from '@/lib/auth-client'
 import { loginSchema } from '#shared/schemas/auth'
 
 definePageMeta({ layout: 'auth', middleware: 'guest' })
+const description = 'Entre no Bruno Finanças e veja seu saldo do mês, seus orçamentos e suas metas. Controle financeiro pessoal e gratuito.'
+useSeoMeta({
+  title: 'Entrar',
+  description,
+  ogDescription: description,
+  twitterDescription: description,
+  ogTitle: 'Entre na sua conta | Bruno Finanças',
+})
+useHead({
+  script: [{ type: 'application/ld+json', innerHTML: JSON.stringify(webApplicationJsonLd(String(useRuntimeConfig().public.siteUrl))) }],
+})
 
 const router = useRouter()
 const loading = ref(false)
@@ -57,8 +69,6 @@ const { handleSubmit, errors, defineField } = useForm({
 const [email, emailAttrs] = defineField('email')
 const [password, passwordAttrs] = defineField('password')
 
-// Mensagem genérica de propósito — não revelar se o e-mail existe ou não
-// (ARCHITECTURE.md, seção H, mitigação de credential stuffing).
 const onSubmit = handleSubmit(async (values) => {
   loading.value = true
   const { error } = await authClient.signIn.email(values)

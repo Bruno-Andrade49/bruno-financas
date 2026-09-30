@@ -1,6 +1,3 @@
-// Orquestra a geração de insights determinísticos. Só fala com outros
-// módulos através dos services deles (budgets.service), nunca acessando o
-// repository de outro domínio direto — ARCHITECTURE.md, seção A.
 import * as repo from './insights.repository'
 import * as budgetsService from '../budgets/budgets.service'
 import { topExpenseRule, categoryIncreaseRule, budgetAlertRule } from './insights.rules'
@@ -27,7 +24,6 @@ export async function generateForUser(userId: string, month: string) {
   return repo.listForUser(userId)
 }
 
-/** Usado pela rota interna de cron — regenera para todo mundo (ARCHITECTURE.md, seção L). */
 export async function generateForAllUsers(month: string) {
   const userIds = await repo.listActiveUserIds()
   for (const userId of userIds) {
