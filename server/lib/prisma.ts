@@ -6,6 +6,10 @@ function createPrismaClient() {
     throw new Error('DATABASE_URL não definida. Copie .env.example para .env e configure o banco.')
   }
 
+  if (process.env.VERCEL && /@(localhost|127\.0\.0\.1)[:/]/.test(connectionString)) {
+    console.error('[prisma] DATABASE_URL aponta pra localhost na Vercel. Use a connection string do Neon.')
+  }
+
   const driver = process.env.DATABASE_DRIVER ?? (connectionString.includes('neon.tech') ? 'neon' : 'pg')
 
   if (driver === 'neon') {

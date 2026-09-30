@@ -31,14 +31,12 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: false, // não bloqueia o login, só envia o link
     sendResetPassword: async ({ user, url }) => {
-      const { subject, html } = resetPasswordEmail(url)
-      await sendEmail({ to: user.email, subject, html })
+      await sendEmail({ to: user.email, ...resetPasswordEmail(url) })
     },
   },
   emailVerification: {
     sendVerificationEmail: async ({ user, url }) => {
-      const { subject, html } = verificationEmail(url)
-      await sendEmail({ to: user.email, subject, html })
+      await sendEmail({ to: user.email, ...verificationEmail(url) })
     },
     sendOnSignUp: true,
   },

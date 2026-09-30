@@ -6,6 +6,7 @@ interface EmailInput {
   to: string
   subject: string
   html: string
+  text?: string
 }
 
 let smtp: Transporter | null = null
