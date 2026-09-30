@@ -2,22 +2,20 @@
   <Card v-if="invalidToken">
     <CardHeader>
       <CardTitle class="text-2xl font-bold tracking-tight">Link inválido ou expirado</CardTitle>
-      <CardDescription>Peça um novo link de recuperação de senha.</CardDescription>
+      <CardDescription>Os links de recuperação valem por 1 hora e só podem ser usados uma vez. Peça um novo.</CardDescription>
     </CardHeader>
-    <CardFooter class="justify-center text-sm text-muted-foreground">
-      <NuxtLink to="/forgot-password" class="font-medium text-foreground underline-offset-4 hover:underline">
-        Pedir novo link
-      </NuxtLink>
+    <CardFooter>
+      <Button as-child class="press h-11 w-full rounded-xl"><NuxtLink to="/forgot-password">Pedir novo link</NuxtLink></Button>
     </CardFooter>
   </Card>
 
   <Card v-else-if="done">
     <CardHeader>
       <CardTitle class="text-2xl font-bold tracking-tight">Senha redefinida</CardTitle>
-      <CardDescription>Já pode entrar com a nova senha.</CardDescription>
+      <CardDescription>Pronto. Já pode entrar com a nova senha.</CardDescription>
     </CardHeader>
-    <CardFooter class="justify-center">
-      <Button as-child class="w-full"><NuxtLink to="/login">Ir para o login</NuxtLink></Button>
+    <CardFooter>
+      <Button as-child class="press h-11 w-full rounded-xl"><NuxtLink to="/login">Ir para o login</NuxtLink></Button>
     </CardFooter>
   </Card>
 
@@ -27,14 +25,26 @@
       <CardDescription>Escolha uma nova senha para sua conta.</CardDescription>
     </CardHeader>
     <CardContent>
-      <form class="space-y-4" @submit="onSubmit">
+      <form class="space-y-4" novalidate @submit="onSubmit">
         <div class="space-y-2">
           <Label for="password">Nova senha</Label>
-          <Input id="password" v-model="password" v-bind="passwordAttrs" type="password" autocomplete="new-password" />
-          <p v-if="errors.password" class="text-sm text-destructive">{{ errors.password }}</p>
+          <PasswordInput
+            id="password"
+            v-model="password"
+            v-bind="passwordAttrs"
+            autocomplete="new-password"
+            :aria-invalid="!!errors.password"
+            aria-describedby="password-error password-strength"
+          />
+          <FieldError id="password-error" :message="errors.password" />
+          <PasswordStrength id="password-strength" :password="password ?? ''" />
         </div>
+
+        <FormAlert :message="formError" />
+
         <Button type="submit" class="press h-11 w-full rounded-xl text-base" :disabled="loading">
-          {{ loading ? 'Salvando...' : 'Redefinir senha' }}
+          <PhSpinnerGap v-if="loading" class="size-4 animate-spin" />
+          {{ loading ? 'Salvando' : 'Redefinir senha' }}
         </Button>
       </form>
     </CardContent>
@@ -42,44 +52,40 @@
 </template>
 
 <script setup lang="ts">
-import { toTypedSchema } from '@vee-validate/zod'
-import { useForm } from 'vee-validate'
-import { toast } from 'vue-sonner'
+import { PhSpinnerGap } from '@phosphor-icons/vue'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import FieldError from '@/components/auth/FieldError.vue'
+import FormAlert from '@/components/auth/FormAlert.vue'
+import PasswordInput from '@/components/auth/PasswordInput.vue'
+import PasswordStrength from '@/components/auth/PasswordStrength.vue'
 import { authClient } from '@/lib/auth-client'
 import { resetPasswordSchema } from '#shared/schemas/auth'
 
 definePageMeta({ layout: 'auth' })
+// link com token de uso único, não deve ser indexado
 useSeoMeta({ title: 'Redefinir senha', robots: 'noindex, nofollow' })
 
 const route = useRoute()
 const token = computed(() => (typeof route.query.token === 'string' ? route.query.token : ''))
-const invalidToken = computed(() => Boolean(route.query.error) || !token.value)
-
-const loading = ref(false)
+const tokenRejected = ref(false)
+const invalidToken = computed(() => Boolean(route.query.error) || !token.value || tokenRejected.value)
 const done = ref(false)
 
-const { handleSubmit, errors, defineField } = useForm({
-  validationSchema: toTypedSchema(resetPasswordSchema),
-})
-const [password, passwordAttrs] = defineField('password')
+const { field, submit, errors, formError, loading, showServerError } = useAuthForm(resetPasswordSchema)
+const [password, passwordAttrs] = field('password')
 
-const onSubmit = handleSubmit(async (values) => {
-  loading.value = true
-  const { error } = await authClient.resetPassword({
-    newPassword: values.password,
-    token: token.value,
-  })
-  loading.value = false
-
+const onSubmit = submit(async (values) => {
+  const { error } = await authClient.resetPassword({ newPassword: values.password!, token: token.value })
   if (error) {
-    toast.error('Não foi possível redefinir a senha. O link pode ter expirado.')
+    if (error.code === 'INVALID_TOKEN' || error.code === 'TOKEN_EXPIRED') {
+      tokenRejected.value = true
+      return
+    }
+    showServerError(error)
     return
   }
-
   done.value = true
 })
 </script>

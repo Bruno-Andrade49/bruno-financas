@@ -5,14 +5,29 @@
       <CardDescription>Informe seu e-mail e mandamos um link para redefinir a senha.</CardDescription>
     </CardHeader>
     <CardContent>
-      <form class="space-y-4" @submit="onSubmit">
+      <form class="space-y-4" novalidate @submit="onSubmit">
         <div class="space-y-2">
           <Label for="email">E-mail</Label>
-          <Input id="email" v-model="email" v-bind="emailAttrs" type="email" autocomplete="email" />
-          <p v-if="errors.email" class="text-sm text-destructive">{{ errors.email }}</p>
+          <Input
+            id="email"
+            v-model="email"
+            v-bind="emailAttrs"
+            type="email"
+            inputmode="email"
+            autocomplete="email"
+            placeholder="nome@email.com"
+            class="h-11 rounded-xl"
+            :aria-invalid="!!errors.email"
+            aria-describedby="email-error"
+          />
+          <FieldError id="email-error" :message="errors.email" />
         </div>
+
+        <FormAlert :message="formError" />
+
         <Button type="submit" class="press h-11 w-full rounded-xl text-base" :disabled="loading">
-          {{ loading ? 'Enviando...' : 'Enviar link de recuperação' }}
+          <PhSpinnerGap v-if="loading" class="size-4 animate-spin" />
+          {{ loading ? 'Enviando' : 'Enviar link de recuperação' }}
         </Button>
       </form>
     </CardContent>
@@ -27,10 +42,12 @@
     <CardHeader>
       <CardTitle class="text-2xl font-bold tracking-tight">Verifique seu e-mail</CardTitle>
       <CardDescription>
-        Se existir uma conta com esse e-mail, enviamos um link de recuperação. Ele expira em 1 hora.
+        Se existir uma conta com <span class="font-medium text-foreground">{{ sentTo }}</span>, enviamos um link de
+        recuperação. Ele vale por 1 hora. Confira também a caixa de spam.
       </CardDescription>
     </CardHeader>
-    <CardFooter class="justify-center text-sm text-muted-foreground">
+    <CardFooter class="flex-col gap-3 text-sm text-muted-foreground">
+      <Button variant="outline" class="press w-full rounded-xl" @click="sent = false">Usar outro e-mail</Button>
       <NuxtLink to="/login" class="font-medium text-foreground underline-offset-4 hover:underline">
         Voltar para o login
       </NuxtLink>
@@ -39,40 +56,33 @@
 </template>
 
 <script setup lang="ts">
-import { toTypedSchema } from '@vee-validate/zod'
-import { useForm } from 'vee-validate'
-import { toast } from 'vue-sonner'
+import { PhSpinnerGap } from '@phosphor-icons/vue'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import FieldError from '@/components/auth/FieldError.vue'
+import FormAlert from '@/components/auth/FormAlert.vue'
 import { authClient } from '@/lib/auth-client'
 import { forgotPasswordSchema } from '#shared/schemas/auth'
 
 definePageMeta({ layout: 'auth' })
 useSeoMeta({ title: 'Recuperar senha', robots: 'noindex' })
 
-const loading = ref(false)
 const sent = ref(false)
+const sentTo = ref('')
 
-const { handleSubmit, errors, defineField } = useForm({
-  validationSchema: toTypedSchema(forgotPasswordSchema),
-})
-const [email, emailAttrs] = defineField('email')
+const { field, submit, errors, formError, loading, showServerError } = useAuthForm(forgotPasswordSchema)
+const [email, emailAttrs] = field('email')
 
-const onSubmit = handleSubmit(async (values) => {
-  loading.value = true
-  const { error } = await authClient.requestPasswordReset({
-    email: values.email,
-    redirectTo: '/reset-password',
-  })
-  loading.value = false
-
+// A resposta é a mesma exista ou não a conta, pra não revelar quem é cadastrado.
+const onSubmit = submit(async (values) => {
+  const { error } = await authClient.requestPasswordReset({ email: values.email!, redirectTo: '/reset-password' })
   if (error) {
-    toast.error('Não foi possível enviar o e-mail agora. Tente de novo em instantes.')
+    showServerError(error)
     return
   }
-
+  sentTo.value = values.email!
   sent.value = true
 })
 </script>
