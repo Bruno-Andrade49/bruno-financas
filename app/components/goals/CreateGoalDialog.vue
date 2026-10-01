@@ -18,7 +18,7 @@
 
         <div class="space-y-2">
           <Label for="targetAmount">Valor alvo</Label>
-          <Input id="targetAmount" v-model="targetAmount" v-bind="targetAmountAttrs" type="number" step="0.01" min="0" />
+          <CurrencyInput id="targetAmount" v-model="targetAmount" :aria-invalid="!!errors.targetAmount" />
           <p v-if="errors.targetAmount" class="text-sm text-destructive">{{ errors.targetAmount }}</p>
         </div>
 
@@ -46,6 +46,7 @@ import { toast } from 'vue-sonner'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import CurrencyInput from '@/components/common/CurrencyInput.vue'
 import { Label } from '@/components/ui/label'
 import { createGoalSchema } from '#shared/schemas/goal'
 
@@ -58,7 +59,7 @@ const { handleSubmit, errors, defineField, resetForm } = useForm({
   validationSchema: toTypedSchema(createGoalSchema),
 })
 const [name, nameAttrs] = defineField('name')
-const [targetAmount, targetAmountAttrs] = defineField('targetAmount')
+const [targetAmount] = defineField('targetAmount')
 const [targetDate, targetDateAttrs] = defineField('targetDate')
 
 const onSubmit = handleSubmit(async (values) => {
@@ -66,7 +67,7 @@ const onSubmit = handleSubmit(async (values) => {
   try {
     await $fetch('/api/v1/goals', {
       method: 'POST',
-      body: { ...values, targetAmount: Number(values.targetAmount) },
+      body: { ...values, targetAmount: values.targetAmount },
     })
     toast.success('Meta criada')
     resetForm()

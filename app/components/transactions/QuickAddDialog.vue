@@ -35,11 +35,11 @@
 
         <div v-else class="rise-in space-y-4 rounded-xl bg-muted/60 p-4">
           <div class="flex items-end justify-between gap-3">
-            <div class="min-w-0">
+            <div class="min-w-0 shrink-0 basis-2/5">
               <p class="truncate text-sm font-medium">{{ parsed.description }}</p>
               <button
                 type="button"
-                class="press mt-1 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-semibold"
+                class="press mt-1 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-semibold whitespace-nowrap"
                 :class="type === 'income' ? 'bg-income/15 text-income' : 'bg-expense/15 text-expense'"
                 title="Trocar entre despesa e receita"
                 @click="typeOverride = type === 'income' ? 'expense' : 'income'"
@@ -50,14 +50,15 @@
               </button>
             </div>
             <p
-              class="shrink-0 text-2xl font-bold tracking-tight tabular-nums"
+              class="min-w-0 flex-1 truncate text-right text-xl font-bold tracking-tight tabular-nums sm:text-2xl"
+              :title="parsed.amount ? format(parsed.amount) : undefined"
               :class="parsed.amount ? (type === 'income' ? 'text-income' : 'text-expense') : 'text-muted-foreground'"
             >
               {{ parsed.amount ? format(parsed.amount) : 'R$ 0,00' }}
             </p>
           </div>
 
-          <div class="grid grid-cols-[1fr_auto] gap-2">
+          <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
             <Select v-model="categoryId">
               <SelectTrigger class="w-full bg-background" aria-label="Categoria">
                 <SelectValue placeholder="Escolha a categoria" />
@@ -71,7 +72,10 @@
             <Input v-model="date" type="date" class="w-[9.5rem] bg-background" aria-label="Data" />
           </div>
 
-          <p v-if="!parsed.amount" class="text-xs text-muted-foreground">
+          <p v-if="tooBig" class="text-xs font-medium text-expense">
+            Valor acima do limite de {{ format(MAX_AMOUNT) }}.
+          </p>
+          <p v-else-if="!parsed.amount" class="text-xs text-muted-foreground">
             Inclua um valor, por exemplo <span class="font-medium text-foreground">35</span> ou
             <span class="font-medium text-foreground">42,90</span>.
           </p>
@@ -99,6 +103,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { normalize, parseQuickAdd } from '#shared/quick-add'
+import { MAX_AMOUNT } from '#shared/schemas/money'
 
 interface Category {
   id: string
@@ -164,7 +169,8 @@ const date = computed({
   },
 })
 
-const canSave = computed(() => !!parsed.value.amount && !!categoryId.value && !!financialAccountId.value)
+const tooBig = computed(() => (parsed.value.amount ?? 0) > MAX_AMOUNT)
+const canSave = computed(() => !!parsed.value.amount && !tooBig.value && !!categoryId.value && !!financialAccountId.value)
 
 watch(text, (value, previous) => {
   if (!value.trim() || !previous?.trim()) {

@@ -37,11 +37,11 @@
               <div class="grid grid-cols-2 gap-2.5">
                 <label class="space-y-1">
                   <span class="text-xs font-medium text-muted-foreground">Valor da parcela</span>
-                  <MoneyInput v-model="purchase.installmentAmount" />
+                  <CurrencyInput v-model="purchase.installmentAmount" />
                 </label>
                 <label class="space-y-1">
                   <span class="text-xs font-medium text-muted-foreground">Nº de parcelas</span>
-                  <Input v-model="purchase.installments" type="number" inputmode="numeric" min="1" max="48" class="bg-background tabular-nums" />
+                  <IntegerInput v-model="purchase.installments" :min="1" :max="48" suffix="x" />
                 </label>
                 <label class="space-y-1">
                   <span class="text-xs font-medium text-muted-foreground">Primeira parcela</span>
@@ -56,7 +56,7 @@
                 </label>
                 <label class="space-y-1">
                   <span class="text-xs font-medium text-muted-foreground">Preço à vista <span class="font-normal">(opcional)</span></span>
-                  <MoneyInput v-model="purchase.cashPrice" />
+                  <CurrencyInput v-model="purchase.cashPrice" placeholder="opcional" />
                 </label>
               </div>
               <p class="text-xs text-muted-foreground tabular-nums">
@@ -78,15 +78,15 @@
           <CardContent class="space-y-3">
             <label class="flex items-center justify-between gap-3">
               <span class="text-sm">Renda por mês</span>
-              <MoneyInput v-model="form.income" class="w-36" />
+              <CurrencyInput v-model="form.income" class="w-40 shrink-0" />
             </label>
             <label class="flex items-center justify-between gap-3">
               <span class="text-sm">Gastos habituais</span>
-              <MoneyInput v-model="form.expenses" class="w-36" />
+              <CurrencyInput v-model="form.expenses" class="w-40 shrink-0" />
             </label>
             <label class="flex items-center justify-between gap-3">
               <span class="text-sm">Quero guardar por mês</span>
-              <MoneyInput v-model="form.savings" class="w-36" />
+              <CurrencyInput v-model="form.savings" class="w-40 shrink-0" />
             </label>
             <p v-if="baseline?.savingsSource === 'goals' && baseline.goals.length" class="text-xs text-muted-foreground">
               Soma do que suas metas pedem por mês: {{ goalNames }}.
@@ -207,7 +207,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import MoneyInput from '@/components/common/MoneyInput.vue'
+import CurrencyInput from '@/components/common/CurrencyInput.vue'
+import IntegerInput from '@/components/common/IntegerInput.vue'
 import ProjectionChart from '@/components/simulator/ProjectionChart.vue'
 import { COMMITMENT_ALERT, simulatePurchases } from '#shared/purchase-simulator'
 import { parseMoney } from '#shared/money'
@@ -220,10 +221,10 @@ const { format } = useCurrencyFormat()
 interface PurchaseForm {
   id: string
   name: string
-  installmentAmount: string
-  installments: string
+  installmentAmount: number | null
+  installments: number | null
   startOffset: string
-  cashPrice: string
+  cashPrice: number | null
 }
 
 const STORAGE_KEY = 'bf-simulator'
@@ -231,30 +232,29 @@ const newId = () => Math.random().toString(36).slice(2, 10)
 const examplePurchase = (): PurchaseForm => ({
   id: newId(),
   name: 'PlayStation 5',
-  installmentAmount: '400',
-  installments: '10',
+  installmentAmount: 400,
+  installments: 10,
   startOffset: '1',
-  cashPrice: '3799',
+  cashPrice: 3799,
 })
 
 const form = reactive({
   purchases: [examplePurchase()] as PurchaseForm[],
-  income: '',
-  expenses: '',
-  savings: '',
+  income: null as number | null,
+  expenses: null as number | null,
+  savings: null as number | null,
 })
 
 const { data: baseline, pending: baselinePending, error: baselineError } = await useFetch('/api/v1/simulator/baseline')
 
 const num = parseMoney
 
-const toField = (value: number) => value.toLocaleString('pt-BR', { maximumFractionDigits: 2 })
 
 function fillFromBaseline() {
   if (!baseline.value) return
-  form.income = toField(baseline.value.monthlyIncome)
-  form.expenses = toField(baseline.value.monthlyExpenses)
-  form.savings = toField(baseline.value.savingsTarget)
+  form.income = baseline.value.monthlyIncome
+  form.expenses = baseline.value.monthlyExpenses
+  form.savings = baseline.value.savingsTarget
 }
 
 const isEdited = computed(
@@ -274,8 +274,19 @@ fillFromBaseline()
 onMounted(() => {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null')
-    if (saved?.purchases?.length) form.purchases = saved.purchases
-    if (saved?.overrides) Object.assign(form, saved.overrides)
+    if (saved?.purchases?.length) {
+      form.purchases = saved.purchases.map((p: Record<string, unknown>) => ({
+        ...p,
+        installmentAmount: parseMoney(p.installmentAmount as string) || null,
+        installments: Math.round(parseMoney(p.installments as string)) || null,
+        cashPrice: parseMoney(p.cashPrice as string) || null,
+      }))
+    }
+    if (saved?.overrides) {
+      form.income = parseMoney(saved.overrides.income)
+      form.expenses = parseMoney(saved.overrides.expenses)
+      form.savings = parseMoney(saved.overrides.savings)
+    }
   } catch {
     // sem localStorage, segue sem salvar
   }
@@ -299,7 +310,7 @@ watch(
 )
 
 function addPurchase() {
-  form.purchases.push({ id: newId(), name: '', installmentAmount: '', installments: '6', startOffset: '1', cashPrice: '' })
+  form.purchases.push({ id: newId(), name: '', installmentAmount: null, installments: 6, startOffset: '1', cashPrice: null })
 }
 function removePurchase(id: string) {
   form.purchases = form.purchases.filter((p) => p.id !== id)

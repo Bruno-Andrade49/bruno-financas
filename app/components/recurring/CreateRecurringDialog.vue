@@ -27,7 +27,7 @@
 
         <div class="space-y-2">
           <Label for="amount">Valor</Label>
-          <Input id="amount" v-model="amount" v-bind="amountAttrs" type="number" step="0.01" min="0" />
+          <CurrencyInput id="amount" v-model="amount" :aria-invalid="!!errors.amount" />
           <p v-if="errors.amount" class="text-sm text-destructive">{{ errors.amount }}</p>
         </div>
 
@@ -92,6 +92,7 @@ import { toast } from 'vue-sonner'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import CurrencyInput from '@/components/common/CurrencyInput.vue'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { createRecurringTransactionSchema } from '#shared/schemas/recurring'
@@ -117,7 +118,7 @@ const { handleSubmit, errors, defineField, resetForm } = useForm({
   initialValues: { startDate: new Date().toISOString().slice(0, 10), frequency: 'monthly' },
 })
 const [description, descriptionAttrs] = defineField('description')
-const [amount, amountAttrs] = defineField('amount')
+const [amount] = defineField('amount')
 const [categoryId] = defineField('categoryId')
 const [frequency] = defineField('frequency')
 const [startDate, startDateAttrs] = defineField('startDate')
@@ -145,7 +146,7 @@ const onSubmit = handleSubmit(async (values) => {
         type: type.value,
         financialAccountId,
         paymentMethodId,
-        amount: Number(values.amount),
+        amount: values.amount,
         endDate: values.endDate || undefined,
       },
     })

@@ -28,7 +28,7 @@
       </div>
 
       <form v-if="goal.status === 'active'" class="flex items-center gap-2" @submit.prevent="handleContribute">
-        <Input v-model="contributionAmount" type="number" step="0.01" min="0" placeholder="Valor do aporte" class="h-9" />
+        <CurrencyInput v-model="contributionAmount" placeholder="Valor do aporte" class="h-9 flex-1 [&_input]:h-9" />
         <Button type="submit" size="sm" variant="secondary" :loading="contributing">
           {{ contributing ? '...' : 'Aportar' }}
         </Button>
@@ -48,7 +48,7 @@ import { toast } from 'vue-sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
+import CurrencyInput from '@/components/common/CurrencyInput.vue'
 import { Progress } from '@/components/ui/progress'
 
 type GoalWithProgress = {
@@ -67,7 +67,7 @@ const props = defineProps<{ goal: GoalWithProgress }>()
 const emit = defineEmits<{ changed: [] }>()
 
 const { format } = useCurrencyFormat()
-const contributionAmount = ref('')
+const contributionAmount = ref<number | null>(null)
 const contributing = ref(false)
 const deleting = ref(false)
 
@@ -75,7 +75,7 @@ const statusLabel = computed(() => ({ active: 'Ativa', completed: 'Concluída', 
 const badgeVariant = computed(() => ({ active: 'secondary', completed: 'default', abandoned: 'outline' })[props.goal.status] as 'secondary' | 'default' | 'outline')
 
 async function handleContribute() {
-  const amount = Number(contributionAmount.value)
+  const amount = contributionAmount.value ?? 0
   if (!amount || amount <= 0) {
     toast.error('Informe um valor de aporte válido')
     return
@@ -85,7 +85,7 @@ async function handleContribute() {
   try {
     await $fetch(`/api/v1/goals/${props.goal.id}/contribute`, { method: 'POST', body: { amount } })
     toast.success('Aporte registrado')
-    contributionAmount.value = ''
+    contributionAmount.value = null
     emit('changed')
   } catch {
     toast.error('Não foi possível registrar o aporte')

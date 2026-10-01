@@ -29,13 +29,13 @@
 
         <div class="space-y-2">
           <Label for="amount">Valor</Label>
-          <Input id="amount" v-model="amount" v-bind="amountAttrs" type="number" step="0.01" min="0" />
+          <CurrencyInput id="amount" v-model="amount" :aria-invalid="!!errors.amount" />
           <p v-if="errors.amount" class="text-sm text-destructive">{{ errors.amount }}</p>
         </div>
 
         <div class="space-y-2">
           <Label for="description">Descrição</Label>
-          <Input id="description" v-model="description" v-bind="descriptionAttrs" placeholder="Ex.: Almoço" />
+          <Input id="description" v-model="description" v-bind="descriptionAttrs" maxlength="200" placeholder="Ex.: Almoço" />
           <p v-if="errors.description" class="text-sm text-destructive">{{ errors.description }}</p>
         </div>
 
@@ -78,6 +78,7 @@ import { toast } from 'vue-sonner'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import CurrencyInput from '@/components/common/CurrencyInput.vue'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { createTransactionSchema } from '#shared/schemas/transaction'
@@ -101,7 +102,7 @@ const { handleSubmit, errors, defineField, resetForm } = useForm({
   validationSchema: toTypedSchema(createTransactionSchema.omit({ type: true, financialAccountId: true, paymentMethodId: true })),
   initialValues: { date: new Date().toISOString().slice(0, 10) },
 })
-const [amount, amountAttrs] = defineField('amount')
+const [amount] = defineField('amount')
 const [description, descriptionAttrs] = defineField('description')
 const [categoryId] = defineField('categoryId')
 const [date, dateAttrs] = defineField('date')
@@ -119,7 +120,7 @@ const onSubmit = handleSubmit(async (values) => {
   try {
     await $fetch('/api/v1/transactions', {
       method: 'POST',
-      body: { ...values, type: type.value, financialAccountId, paymentMethodId, amount: Number(values.amount) },
+      body: { ...values, type: type.value, financialAccountId, paymentMethodId, amount: values.amount },
     })
     toast.success('Transação registrada')
     resetForm({ values: { date: new Date().toISOString().slice(0, 10) } })

@@ -16,7 +16,12 @@ const newPassword = z
   .refine((value) => !passwordStrength(value).common, 'Essa senha é muito comum, escolha outra')
 
 export const registerSchema = z.object({
-  name: z.string({ required_error: 'Informe seu nome' }).trim().min(1, 'Informe seu nome').max(100, 'Nome muito longo'),
+  name: z
+    .string({ required_error: 'Informe seu nome' })
+    .trim()
+    .min(1, 'Informe seu nome')
+    .max(100, 'Nome muito longo')
+    .regex(/^[\p{L}\s'-]+$/u, 'Use só letras no nome'),
   email,
   password: newPassword,
 })

@@ -27,20 +27,13 @@
 
         <div class="space-y-2">
           <Label for="limitAmount">Limite mensal</Label>
-          <Input id="limitAmount" v-model="limitAmount" v-bind="limitAmountAttrs" type="number" step="0.01" min="0" />
+          <CurrencyInput id="limitAmount" v-model="limitAmount" :aria-invalid="!!errors.limitAmount" />
           <p v-if="errors.limitAmount" class="text-sm text-destructive">{{ errors.limitAmount }}</p>
         </div>
 
         <div class="space-y-2">
           <Label for="alertThresholdPct">Alertar a partir de (%)</Label>
-          <Input
-            id="alertThresholdPct"
-            v-model="alertThresholdPct"
-            v-bind="alertThresholdPctAttrs"
-            type="number"
-            min="1"
-            max="100"
-          />
+          <IntegerInput id="alertThresholdPct" v-model="alertThresholdPct" :min="1" :max="100" suffix="%" :aria-invalid="!!errors.alertThresholdPct" />
           <p v-if="errors.alertThresholdPct" class="text-sm text-destructive">{{ errors.alertThresholdPct }}</p>
         </div>
 
@@ -61,7 +54,8 @@ import { useForm } from 'vee-validate'
 import { toast } from 'vue-sonner'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
+import CurrencyInput from '@/components/common/CurrencyInput.vue'
+import IntegerInput from '@/components/common/IntegerInput.vue'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { createBudgetSchema } from '#shared/schemas/budget'
@@ -80,15 +74,15 @@ const { handleSubmit, errors, defineField, resetForm } = useForm({
   initialValues: { alertThresholdPct: 80 },
 })
 const [categoryId] = defineField('categoryId')
-const [limitAmount, limitAmountAttrs] = defineField('limitAmount')
-const [alertThresholdPct, alertThresholdPctAttrs] = defineField('alertThresholdPct')
+const [limitAmount] = defineField('limitAmount')
+const [alertThresholdPct] = defineField('alertThresholdPct')
 
 const onSubmit = handleSubmit(async (values) => {
   loading.value = true
   try {
     await $fetch('/api/v1/budgets', {
       method: 'POST',
-      body: { ...values, referenceMonth: props.month, limitAmount: Number(values.limitAmount) },
+      body: { ...values, referenceMonth: props.month, limitAmount: values.limitAmount },
     })
     toast.success('Orçamento criado')
     resetForm({ values: { alertThresholdPct: 80 } })

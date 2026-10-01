@@ -170,6 +170,8 @@
   }
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    /* texto longo sem espaço (ex.: valor grande) quebra em vez de vazar da tela */
+    overflow-wrap: break-word;
     font-feature-settings: 'tnum' 1, 'cv11' 1;
     -webkit-tap-highlight-color: transparent;
   }

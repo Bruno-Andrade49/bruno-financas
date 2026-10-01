@@ -8,7 +8,7 @@
       <form class="space-y-4" novalidate @submit="onSubmit">
         <div class="space-y-2">
           <Label for="name">Nome</Label>
-          <Input
+          <NameInput
             id="name"
             v-model="name"
             v-bind="nameAttrs"
@@ -81,6 +81,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import FieldError from '@/components/auth/FieldError.vue'
 import FormAlert from '@/components/auth/FormAlert.vue'
+import NameInput from '@/components/auth/NameInput.vue'
 import PasswordInput from '@/components/auth/PasswordInput.vue'
 import PasswordStrength from '@/components/auth/PasswordStrength.vue'
 import { authClient } from '@/lib/auth-client'
